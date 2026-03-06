@@ -1,0 +1,101 @@
+{
+  "data": {
+    "user": {
+      "result": {
+        "__typename": "User",
+        "timeline": {
+          "timeline": {
+            "instructions": [
+              {
+                "type": "TimelineAddEntries",
+                "entries": [
+                  {
+                    "entryId": "user-111111111",
+                    "sortIndex": "111111111",
+                    "content": {
+                      "entryType": "TimelineTimelineItem",
+                      "itemContent": {
+                        "itemType": "TimelineUser",
+                        "user_results": {
+                          "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjoxMTExMTExMTE=",
+                            "rest_id": "111111111",
+                            "legacy": {
+                              "id": 111111111,
+                              "id_str": "111111111",
+                              "name": "Sarah Chen",
+                              "screen_name": "sarahchen_vip",
+                              "location": "New York, NY",
+                              "description": "Tech investor | 50K+ followers | Building the future",
+                              "url": "https://t.co/sarahchen",
+                              "protected": false,
+                              "followers_count": 52000,
+                              "following_count": 1200,
+                              "listed_count": 450,
+                              "created_at": "Mon Jan 10 08:00:00 +0000 2015",
+                              "favourites_count": 25000,
+                              "verified": true,
+                              "statuses_count": 15000,
+                              "profile_image_url_https": "https://pbs.twimg.com/profile_images/1111111111/sarah.jpg",
+                              "following": false,
+                              "followed_by": true,
+                              "follow_request_sent": false
+                            },
+                            "followed_by": true,
+                            "following": false
+                          }
+                        },
+                        "userDisplayType": "User"
+                      }
+                    }
+                  },
+                  {
+                    "entryId": "user-222222222",
+                    "sortIndex": "222222222",
+                    "content": {
+                      "entryType": "TimelineTimelineItem",
+                      "itemContent": {
+                        "itemType": "TimelineUser",
+                        "user_results": {
+                          "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjoyMjIyMjIyMjI=",
+                            "rest_id": "222222222",
+                            "legacy": {
+                              "id": 222222222,
+                              "id_str": "222222222",
+                              "name": "John Doe",
+                              "screen_name": "johndoe_regular",
+                              "location": "",
+                              "description": "Just a regular guy",
+                              "protected": false,
+                              "followers_count": 45,
+                              "following_count": 100,
+                              "listed_count": 0,
+                              "created_at": "Tue Jun 15 12:00:00 +0000 2021",
+                              "favourites_count": 500,
+                              "verified": false,
+                              "statuses_count": 120,
+                              "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
+                              "following": false,
+                              "followed_by": false,
+                              "follow_request_sent": false
+                            },
+                            "followed_by": false,
+                            "following": false
+                          }
+                        },
+                        "userDisplayType": "User"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

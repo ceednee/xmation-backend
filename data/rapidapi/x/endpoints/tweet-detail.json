@@ -1,0 +1,131 @@
+{
+  "data": {
+    "tweetResult": {
+      "id": "1892702078029476328",
+      "rest_id": "1892702078029476328",
+      "legacy": {
+        "id": 1892702078029476328,
+        "id_str": "1892702078029476328",
+        "created_at": "Mon Feb 20 14:30:00 +0000 2026",
+        "text": "Just shipped a new feature! 🚀 Check it out at https://example.com/feature #buildinpublic",
+        "truncated": false,
+        "entities": {
+          "hashtags": [
+            {
+              "text": "buildinpublic",
+              "indices": [64, 78]
+            }
+          ],
+          "symbols": [],
+          "user_mentions": [],
+          "urls": [
+            {
+              "url": "https://example.com/feature",
+              "expanded_url": "https://example.com/feature",
+              "display_url": "example.com/feature",
+              "indices": [37, 63]
+            }
+          ],
+          "media": []
+        },
+        "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+        "in_reply_to_status_id": null,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id": null,
+        "in_reply_to_user_id_str": null,
+        "in_reply_to_screen_name": null,
+        "user_id": 44196397,
+        "user_id_str": "44196397",
+        "geo": null,
+        "coordinates": null,
+        "place": null,
+        "contributors": null,
+        "is_quote_status": false,
+        "retweet_count": 1500,
+        "favorite_count": 8500,
+        "reply_count": 320,
+        "quote_count": 180,
+        "conversation_id": 1892702078029476328,
+        "conversation_id_str": "1892702078029476328",
+        "favorited": false,
+        "retweeted": false,
+        "possibly_sensitive": false,
+        "possibly_sensitive_editable": true,
+        "lang": "en",
+        "supplemental_language": null
+      },
+      "core": {
+        "user_results": {
+          "result": {
+            "__typename": "User",
+            "id": "VXNlcjo0NDE5NjM5Nw==",
+            "rest_id": "44196397",
+            "legacy": {
+              "screen_name": "elonmusk"
+            }
+          }
+        }
+      },
+      "edit_control": {
+        "edit_tweet_ids": ["1892702078029476328"],
+        "editable_until_msecs": "1708441800000",
+        "is_edit_eligible": true,
+        "edits_remaining": "5"
+      },
+      "edit_perspective": {
+        "favorited": false,
+        "retweeted": false
+      },
+      "is_translatable": true,
+      "views": {
+        "count": "2500000",
+        "state": "EnabledWithCount"
+      },
+      "card": {
+        "rest_id": "https://example.com/feature",
+        "legacy": {
+          "binding_values": [],
+          "card_platform": {
+            "platform": {
+              "device": {
+                "name": "Swift",
+                "version": "12"
+              },
+              "audience": {
+                "name": "production"
+              }
+            }
+          }
+        }
+      },
+      "quoted_status_result": null,
+      "retweeted_status_result": null,
+      "note_tweet": {
+        "is_expandable": false,
+        "note_tweet_results": {
+          "result": {
+            "id": "1892702078029476328",
+            "text": "Just shipped a new feature! 🚀 Check it out at https://example.com/feature #buildinpublic",
+            "entity_set": {
+              "hashtags": [],
+              "symbols": [],
+              "urls": [],
+              "user_mentions": []
+            },
+            "richtext": {
+              "richtext_tags": []
+            },
+            "media": {
+              "inline_media": []
+            }
+          }
+        }
+      },
+      "previous_counts": {
+        "retweet_count": 1400,
+        "favorite_count": 8000,
+        "reply_count": 300
+      }
+    }
+  }
+}
