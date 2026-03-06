@@ -5,6 +5,7 @@ import { config } from "./config/env";
 import workflowRoutes from "./routes/workflows";
 import authRoutes from "./routes/auth";
 import triggerRoutes from "./routes/triggers";
+import actionRoutes from "./routes/actions";
 
 // Health check endpoint
 const healthRoutes = new Elysia({ prefix: "/health" })
@@ -30,6 +31,7 @@ const app = new Elysia()
   .use(healthRoutes)
   .use(authRoutes)
   .use(triggerRoutes)
+  .use(actionRoutes)
   .use(workflowRoutes)
   .get("/", () => ({
     message: "X Automation API",
