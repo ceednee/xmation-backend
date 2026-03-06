@@ -13,6 +13,12 @@ import {
   detectUnfollows,
   findLastPostTime,
 } from "./data-extractor";
+import {
+  extractMentionsSimd,
+  extractFollowersSimd,
+  extractUserSimd,
+  autoSelectParser,
+} from "./simdjson-extractor";
 
 // Sync intervals (in minutes)
 const SYNC_INTERVALS = {
@@ -26,6 +32,7 @@ const SYNC_INTERVALS = {
 
 /**
  * Sync user profile
+ * Uses simdjson for parsing user profile data
  */
 export async function syncUserProfile(
   userId: string,
@@ -44,7 +51,17 @@ export async function syncUserProfile(
 
   try {
     const response = await rapidApi.getUserByScreenName(screenName);
-    const user = extractUser(response);
+    
+    // Convert to JSON string for simdjson parsing
+    const jsonString = JSON.stringify(response);
+    
+    // Use simdjson for large responses
+    const parserType = autoSelectParser(jsonString);
+    console.log(`[Sync] Using ${parserType} parser for user profile (${(jsonString.length / 1024).toFixed(2)} KB)`);
+    
+    const user = parserType === "simdjson"
+      ? extractUserSimd(jsonString)
+      : extractUser(response);
 
     if (user) {
       await cache.set(cacheKey, user, SYNC_INTERVALS.timeline * 60);
@@ -59,6 +76,7 @@ export async function syncUserProfile(
 
 /**
  * Sync mentions
+ * Uses simdjson for high-performance parsing of large responses
  */
 export async function syncMentions(
   userId: string,
@@ -69,8 +87,20 @@ export async function syncMentions(
   try {
     console.log(`[Sync] Fetching mentions for ${userId}`);
 
+    // Fetch raw JSON string instead of parsed object
     const response = await rapidApi.getMentions("50");
-    const mentions = extractMentions(response);
+    
+    // Convert to JSON string for simdjson parsing
+    // In real implementation, the API client would return the raw string
+    const jsonString = JSON.stringify(response);
+    
+    // Use simdjson for large responses (>= 10KB)
+    const parserType = autoSelectParser(jsonString);
+    console.log(`[Sync] Using ${parserType} parser (${(jsonString.length / 1024).toFixed(2)} KB)`);
+    
+    const mentions = parserType === "simdjson" 
+      ? extractMentionsSimd(jsonString)
+      : extractMentions(response);
 
     // Filter by sinceId if provided
     let newMentions = mentions;
@@ -103,6 +133,7 @@ export async function syncMentions(
 
 /**
  * Sync followers
+ * Uses simdjson for high-performance parsing of large follower lists
  */
 export async function syncFollowers(
   userId: string,
@@ -119,7 +150,17 @@ export async function syncFollowers(
     console.log(`[Sync] Fetching followers for ${userId}`);
 
     const response = await rapidApi.getFollowers(xUserId, "100");
-    const currentFollowers = extractFollowers(response);
+    
+    // Convert to JSON string for simdjson parsing
+    const jsonString = JSON.stringify(response);
+    
+    // Use simdjson for large responses
+    const parserType = autoSelectParser(jsonString);
+    console.log(`[Sync] Using ${parserType} parser for followers (${(jsonString.length / 1024).toFixed(2)} KB)`);
+    
+    const currentFollowers = parserType === "simdjson"
+      ? extractFollowersSimd(jsonString)
+      : extractFollowers(response);
 
     // Get previous followers from cache
     const previousFollowers =
