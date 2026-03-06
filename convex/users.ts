@@ -201,3 +201,21 @@ export const hasXConnection = query({
     };
   },
 });
+
+/**
+ * Get all active users (for cron jobs)
+ */
+export const getActiveUsers = query({
+  handler: async (ctx) => {
+    const users = await ctx.db
+      .query("users")
+      .filter((q) => q.neq(q.field("xAccessToken"), undefined))
+      .collect();
+
+    return users.map((user) => ({
+      _id: user._id,
+      xUserId: user.xUserId,
+      xUsername: user.xUsername,
+    }));
+  },
+});

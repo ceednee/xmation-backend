@@ -1,0 +1,65 @@
+{
+  "data": {
+    "retweeters_timeline": {
+      "timeline": {
+        "instructions": [
+          {
+            "type": "TimelineAddEntries",
+            "entries": [
+              {
+                "entryId": "user-333333333",
+                "sortIndex": "333333333",
+                "content": {
+                  "entryType": "TimelineTimelineItem",
+                  "itemContent": {
+                    "itemType": "TimelineUser",
+                    "user_results": {
+                      "result": {
+                        "__typename": "User",
+                        "id": "VXNlcjozMzMzMzMzMzM=",
+                        "rest_id": "333333333",
+                        "legacy": {
+                          "id": 333333333,
+                          "id_str": "333333333",
+                          "name": "Tech Insider",
+                          "screen_name": "techinsider",
+                          "location": "Silicon Valley",
+                          "description": "Latest tech news and insights | 100K+ followers",
+                          "protected": false,
+                          "followers_count": 125000,
+                          "following_count": 500,
+                          "listed_count": 1200,
+                          "created_at": "Thu Mar 20 10:00:00 +0000 2014",
+                          "favourites_count": 8000,
+                          "verified": true,
+                          "statuses_count": 25000,
+                          "profile_image_url_https": "https://pbs.twimg.com/profile_images/3333333333/tech.jpg"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "source_tweet": {
+      "id": "1892702078029476328",
+      "rest_id": "1892702078029476328",
+      "legacy": {
+        "id": 1892702078029476328,
+        "id_str": "1892702078029476328",
+        "created_at": "Mon Feb 20 14:30:00 +0000 2026",
+        "text": "Just shipped a new feature! 🚀",
+        "user_id": 44196397,
+        "user_id_str": "44196397",
+        "retweet_count": 1500,
+        "favorite_count": 8500,
+        "reply_count": 320,
+        "quote_count": 180
+      }
+    }
+  }
+}

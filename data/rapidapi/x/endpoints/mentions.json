@@ -1,0 +1,193 @@
+{
+  "data": {
+    "timeline": {
+      "id": "mentions",
+      "instructions": [
+        {
+          "type": "TimelineAddEntries",
+          "entries": [
+            {
+              "entryId": "tweet-1892801234567890123",
+              "sortIndex": "1892801234567890123",
+              "content": {
+                "entryType": "TimelineTimelineItem",
+                "itemContent": {
+                  "itemType": "TimelineTweet",
+                  "tweet_results": {
+                    "result": {
+                      "__typename": "Tweet",
+                      "id": "1892801234567890123",
+                      "rest_id": "1892801234567890123",
+                      "legacy": {
+                        "id": 1892801234567890123,
+                        "id_str": "1892801234567890123",
+                        "created_at": "Mon Feb 20 15:45:00 +0000 2026",
+                        "text": "@elonmusk This is amazing! Can't wait to try it out 🎉",
+                        "truncated": false,
+                        "entities": {
+                          "hashtags": [],
+                          "symbols": [],
+                          "user_mentions": [
+                            {
+                              "screen_name": "elonmusk",
+                              "name": "Elon Musk",
+                              "id": 44196397,
+                              "id_str": "44196397",
+                              "indices": [0, 9]
+                            }
+                          ],
+                          "urls": []
+                        },
+                        "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+                        "in_reply_to_status_id": 1892702078029476328,
+                        "in_reply_to_status_id_str": "1892702078029476328",
+                        "in_reply_to_user_id": 44196397,
+                        "in_reply_to_user_id_str": "44196397",
+                        "in_reply_to_screen_name": "elonmusk",
+                        "user_id": 123456789,
+                        "user_id_str": "123456789",
+                        "geo": null,
+                        "coordinates": null,
+                        "place": null,
+                        "contributors": null,
+                        "is_quote_status": false,
+                        "retweet_count": 0,
+                        "favorite_count": 5,
+                        "reply_count": 0,
+                        "quote_count": 0,
+                        "conversation_id": 1892702078029476328,
+                        "conversation_id_str": "1892702078029476328",
+                        "favorited": false,
+                        "retweeted": false,
+                        "lang": "en"
+                      },
+                      "core": {
+                        "user_results": {
+                          "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjoxMjM0NTY3ODk=",
+                            "rest_id": "123456789",
+                            "legacy": {
+                              "id": 123456789,
+                              "id_str": "123456789",
+                              "name": "Alice Johnson",
+                              "screen_name": "alice_dev",
+                              "location": "San Francisco, CA",
+                              "description": "Software engineer • Open source enthusiast • Coffee addict",
+                              "url": "https://t.co/aliceblog",
+                              "protected": false,
+                              "followers_count": 5000,
+                              "following_count": 800,
+                              "listed_count": 100,
+                              "created_at": "Wed Mar 15 10:30:00 +0000 2017",
+                              "favourites_count": 12000,
+                              "verified": false,
+                              "statuses_count": 8500,
+                              "profile_image_url_https": "https://pbs.twimg.com/profile_images/1234567890/alice.jpg",
+                              "profile_banner_url": "https://pbs.twimg.com/profile_banners/123456789/1234567890/1500x500"
+                            }
+                          }
+                        }
+                      },
+                      "views": {
+                        "count": "150",
+                        "state": "EnabledWithCount"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "entryId": "tweet-1892799876543210987",
+              "sortIndex": "1892799876543210987",
+              "content": {
+                "entryType": "TimelineTimelineItem",
+                "itemContent": {
+                  "itemType": "TimelineTweet",
+                  "tweet_results": {
+                    "result": {
+                      "__typename": "Tweet",
+                      "id": "1892799876543210987",
+                      "rest_id": "1892799876543210987",
+                      "legacy": {
+                        "id": 1892799876543210987,
+                        "id_str": "1892799876543210987",
+                        "created_at": "Mon Feb 20 15:30:00 +0000 2026",
+                        "text": "@elonmusk This is terrible service, very disappointed 😡",
+                        "truncated": false,
+                        "entities": {
+                          "hashtags": [],
+                          "symbols": [],
+                          "user_mentions": [
+                            {
+                              "screen_name": "elonmusk",
+                              "name": "Elon Musk",
+                              "id": 44196397,
+                              "id_str": "44196397",
+                              "indices": [0, 9]
+                            }
+                          ],
+                          "urls": []
+                        },
+                        "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+                        "in_reply_to_status_id": null,
+                        "in_reply_to_status_id_str": null,
+                        "in_reply_to_user_id": 44196397,
+                        "in_reply_to_user_id_str": "44196397",
+                        "in_reply_to_screen_name": "elonmusk",
+                        "user_id": 987654321,
+                        "user_id_str": "987654321",
+                        "geo": null,
+                        "coordinates": null,
+                        "place": null,
+                        "contributors": null,
+                        "is_quote_status": false,
+                        "retweet_count": 0,
+                        "favorite_count": 0,
+                        "reply_count": 0,
+                        "quote_count": 0,
+                        "conversation_id": 1892799876543210987,
+                        "conversation_id_str": "1892799876543210987",
+                        "favorited": false,
+                        "retweeted": false,
+                        "lang": "en"
+                      },
+                      "core": {
+                        "user_results": {
+                          "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjo5ODc2NTQzMjE=",
+                            "rest_id": "987654321",
+                            "legacy": {
+                              "id": 987654321,
+                              "id_str": "987654321",
+                              "name": "Bob Smith",
+                              "screen_name": "bob_frustrated",
+                              "location": "",
+                              "description": "",
+                              "protected": false,
+                              "followers_count": 150,
+                              "following_count": 200,
+                              "verified": false,
+                              "statuses_count": 500,
+                              "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
+                            }
+                          }
+                        }
+                      },
+                      "views": {
+                        "count": "50",
+                        "state": "EnabledWithCount"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

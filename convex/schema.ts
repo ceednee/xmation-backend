@@ -120,4 +120,19 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_userId_timestamp", ["userId", "timestamp"])
     .index("by_eventType", ["eventType"]),
+
+  // Sync state tracking
+  syncState: defineTable({
+    userId: v.id("users"),
+    lastMentionAt: v.optional(v.number()),
+    lastFollowerSyncAt: v.optional(v.number()),
+    lastTimelineSyncAt: v.optional(v.number()),
+    lastLinkCheckAt: v.optional(v.number()),
+    mentionCount: v.number(),
+    followerCount: v.number(),
+    status: v.union(v.literal("idle"), v.literal("syncing"), v.literal("error")),
+    errorMessage: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"]),
 });

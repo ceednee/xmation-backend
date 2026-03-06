@@ -9,7 +9,9 @@ const envSchema = z.object({
   X_CLIENT_SECRET: z.string().default("test_client_secret"),
   ENCRYPTION_KEY: z.string().min(32).default("test-32-character-encryption-key-here"),
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
-  RAPIDAPI_KEY: z.string().default("test_rapidapi_key"),
+  RAPIDAPI_KEY: z.string().min(1, "RAPIDAPI_KEY is required"),
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 });
 
 // Parse and validate environment variables
@@ -29,4 +31,5 @@ export const config = {
   IS_DEV: parsed.data.NODE_ENV === "development",
   IS_PROD: parsed.data.NODE_ENV === "production",
   IS_TEST: parsed.data.NODE_ENV === "test",
+  USE_UPSTASH: !!parsed.data.UPSTASH_REDIS_REST_URL && !!parsed.data.UPSTASH_REDIS_REST_TOKEN,
 };
