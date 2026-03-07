@@ -7,8 +7,8 @@ const envSchema = z.object({
 		.enum(["development", "production", "test"])
 		.default("development"),
 	CONVEX_URL: z.string().url().default("http://localhost:3210"),
-	X_CLIENT_ID: z.string().default("test_client_id"),
-	X_CLIENT_SECRET: z.string().default("test_client_secret"),
+	X_CLIENT_ID: z.string().min(1, "X_CLIENT_ID is required"),
+	X_CLIENT_SECRET: z.string().min(1, "X_CLIENT_SECRET is required"),
 	ENCRYPTION_KEY: z
 		.string()
 		.min(32)
