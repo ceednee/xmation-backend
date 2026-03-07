@@ -88,8 +88,15 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// GET /workflows - List workflows
 	.get(
 		"/",
-		({ query, request }: Context) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+		({ query, request, set }) => {
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				set.status = 401;
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const status = query?.status;
 
 			let workflows = Array.from(workflowsStore.values()).filter(
@@ -118,8 +125,15 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// POST /workflows - Create workflow
 	.post(
 		"/",
-		async ({ body, request }: Context & { body: WorkflowBody }) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+		async ({ body, request, set }: Context & { body: WorkflowBody }) => {
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				set.status = 401;
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 
 			const workflow: Workflow = {
 				_id: generateId(),
