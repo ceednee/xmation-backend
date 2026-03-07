@@ -49,7 +49,9 @@ async function xApiRequest<T>(
 	});
 
 	if (!response.ok) {
-		const error = (await response.json()) as { errors?: Array<{ message: string; code: string }> };
+		const error = (await response.json()) as {
+			errors?: Array<{ message: string; code: string }>;
+		};
 		throw new Error(
 			`X API Error: ${response.status} - ${error.errors?.[0]?.message || response.statusText}`,
 		);
@@ -204,9 +206,14 @@ export async function getFollowers(
 		"user.fields": "public_metrics,verified,profile_image_url,description",
 	};
 	if (options?.max_results) params.max_results = String(options.max_results);
-	if (options?.pagination_token) params.pagination_token = options.pagination_token;
+	if (options?.pagination_token)
+		params.pagination_token = options.pagination_token;
 
-	return xApiRequest(`/users/${userId}/followers`, { params }, { accessToken: token });
+	return xApiRequest(
+		`/users/${userId}/followers`,
+		{ params },
+		{ accessToken: token },
+	);
 }
 
 // 7. GET /2/users/:id/mentions - Get mentions
@@ -220,13 +227,17 @@ export async function getMentions(
 }> {
 	const params: Record<string, string> = {
 		"tweet.fields": "created_at,public_metrics,author_id,referenced_tweets",
-		"expansions": "author_id",
+		expansions: "author_id",
 		"user.fields": "username",
 	};
 	if (options?.since_id) params.since_id = options.since_id;
 	if (options?.max_results) params.max_results = String(options.max_results);
 
-	return xApiRequest(`/users/${userId}/mentions`, { params }, { accessToken: token });
+	return xApiRequest(
+		`/users/${userId}/mentions`,
+		{ params },
+		{ accessToken: token },
+	);
 }
 
 // 8. GET /2/users/:id/tweets - Get user timeline
@@ -243,7 +254,11 @@ export async function getUserTweets(
 	};
 	if (options?.max_results) params.max_results = String(options.max_results);
 
-	return xApiRequest(`/users/${userId}/tweets`, { params }, { accessToken: token });
+	return xApiRequest(
+		`/users/${userId}/tweets`,
+		{ params },
+		{ accessToken: token },
+	);
 }
 
 // 9. GET /2/users/me - Get authenticated user
@@ -318,12 +333,18 @@ export function createXApiClient(accessToken: string) {
 			sendDM(participantId, text, accessToken),
 		followUser: (targetUserId: string, userId: string) =>
 			followUser(targetUserId, userId, accessToken),
-		getFollowers: (userId: string, options?: Parameters<typeof getFollowers>[2]) =>
-			getFollowers(userId, accessToken, options),
-		getMentions: (userId: string, options?: Parameters<typeof getMentions>[2]) =>
-			getMentions(userId, accessToken, options),
-		getUserTweets: (userId: string, options?: Parameters<typeof getUserTweets>[2]) =>
-			getUserTweets(userId, accessToken, options),
+		getFollowers: (
+			userId: string,
+			options?: Parameters<typeof getFollowers>[2],
+		) => getFollowers(userId, accessToken, options),
+		getMentions: (
+			userId: string,
+			options?: Parameters<typeof getMentions>[2],
+		) => getMentions(userId, accessToken, options),
+		getUserTweets: (
+			userId: string,
+			options?: Parameters<typeof getUserTweets>[2],
+		) => getUserTweets(userId, accessToken, options),
 		getAuthenticatedUser: () => getAuthenticatedUser(accessToken),
 		blockUser: (targetUserId: string, userId: string) =>
 			blockUser(targetUserId, userId, accessToken),
