@@ -1,14 +1,14 @@
 import { describe, expect, it, mock } from "bun:test";
 import {
 	createTweet,
-	likeTweet,
-	retweet,
+	createXApiClient,
 	followUser,
+	getAuthenticatedUser,
 	getFollowers,
 	getMentions,
 	getUserTweets,
-	getAuthenticatedUser,
-	createXApiClient,
+	likeTweet,
+	retweet,
 } from "../services/x-api-client";
 
 describe("X API Client", () => {
