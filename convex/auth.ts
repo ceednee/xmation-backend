@@ -18,7 +18,7 @@ export const { auth, signIn, signOut, store } = convexAuth({
       },
       token: "https://api.twitter.com/2/oauth2/token",
       userinfo: "https://api.twitter.com/2/users/me",
-      profile(profile: any) {
+      profile(profile: { data: { id: string; name: string; profile_image_url?: string; username: string } }) {
         return {
           id: profile.data.id,
           name: profile.data.name,
@@ -29,17 +29,4 @@ export const { auth, signIn, signOut, store } = convexAuth({
       },
     },
   ],
-  callbacks: {
-    async session({ session, user }) {
-      // Add X connection status to session
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-          // X data will be fetched separately
-        },
-      };
-    },
-  },
 });
