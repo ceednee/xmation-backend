@@ -1,3 +1,4 @@
+import { createXApiClient } from "../services/x-api-client";
 import type {
 	ActionContext,
 	ActionDefinition,
@@ -5,7 +6,6 @@ import type {
 	ActionResult,
 	XApiClient,
 } from "./types";
-import { createXApiClient } from "../services/x-api-client";
 
 // Helper to create result
 const createResult = (
@@ -75,17 +75,29 @@ const createMockXClient = (): XApiClient => {
 };
 
 // Get X API client (real or mock based on dry-run)
-const getXClient = (_context: ActionContext): XApiClient => {
-	// In a real implementation, you'd get the user's X access token from context
-	// For now, return mock client
-	// TODO: Integrate with Convex to get decrypted X token
+const getXClient = async (context: ActionContext): Promise<XApiClient> => {
+	// In dry-run mode, return mock client
+	if (context.dryRun) {
+		return createMockXClient();
+	}
+
+	// TODO: Get user's X access token from Convex
+	// For production, fetch decrypted token from Convex using context.userId
+	// const convex = new ConvexHttpClient(config.CONVEX_URL);
+	// const tokens = await convex.query(api.users.getXTokens, { userId: context.userId });
+	// if (!tokens) throw new Error("X not connected");
+	// const accessToken = decrypt(tokens.xAccessToken);
+	// return createXApiClient(accessToken);
+
+	// For now, return mock client until Convex integration is complete
+	console.warn("[X API] Using mock client - real X API integration pending");
 	return createMockXClient();
 };
 
 // 1. REPLY_TO_TWEET - Reply to a tweet
 export const replyToTweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const text = replaceTemplates(String(config.text ?? ""), context);
@@ -125,7 +137,7 @@ export const replyToTweetExecutor: ActionExecutor = async (config, context) => {
 // 2. RETWEET - Retweet a tweet
 export const retweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const triggerData = context.triggerData as Record<string, unknown>;
@@ -163,7 +175,7 @@ export const retweetExecutor: ActionExecutor = async (config, context) => {
 // 3. QUOTE_TWEET - Quote tweet with comment
 export const quoteTweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const comment = replaceTemplates(String(config.comment ?? ""), context);
@@ -201,7 +213,7 @@ export const quoteTweetExecutor: ActionExecutor = async (config, context) => {
 // 4. SEND_DM - Send direct message
 export const sendDMExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const text = replaceTemplates(String(config.text ?? ""), context);
@@ -241,7 +253,7 @@ export const sendDMExecutor: ActionExecutor = async (config, context) => {
 // 5. FOLLOW_USER - Follow a user
 export const followUserExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const triggerData = context.triggerData as Record<string, unknown>;
@@ -277,7 +289,7 @@ export const followUserExecutor: ActionExecutor = async (config, context) => {
 // 6. FOLLOW_BACK - Follow back new follower
 export const followBackExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const triggerData = context.triggerData as Record<string, unknown>;
@@ -313,7 +325,7 @@ export const followBackExecutor: ActionExecutor = async (config, context) => {
 // 7. WELCOME_DM - Send welcome DM to new follower
 export const welcomeDMExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const message = replaceTemplates(
@@ -354,7 +366,7 @@ export const welcomeDMExecutor: ActionExecutor = async (config, context) => {
 // 8. PIN_TWEET - Pin a tweet to profile
 export const pinTweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const triggerData = context.triggerData as Record<string, unknown>;
@@ -554,7 +566,7 @@ export const thankYouReplyExecutor: ActionExecutor = async (
 	context,
 ) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const messages = [
@@ -601,7 +613,7 @@ export const thankYouReplyExecutor: ActionExecutor = async (
 // 13. ADD_TO_LIST - Add user to X list
 export const addToListExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const listId = String(config.listId || "");
@@ -648,7 +660,7 @@ export const addToListExecutor: ActionExecutor = async (config, context) => {
 // 14. BLOCK_USER - Block a user
 export const blockUserExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const triggerData = context.triggerData as Record<string, unknown>;
@@ -684,7 +696,7 @@ export const blockUserExecutor: ActionExecutor = async (config, context) => {
 // 15. REPORT_SPAM - Report spam
 export const reportSpamExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
-	const xClient = getXClient(context);
+	const xClient = await getXClient(context);
 
 	try {
 		const triggerData = context.triggerData as Record<string, unknown>;
