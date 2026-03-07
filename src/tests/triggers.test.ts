@@ -1,308 +1,330 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { Elysia } from "elysia";
 
 describe("Triggers System", () => {
-  let triggerEvaluations: any[] = [];
+	interface TriggerEvaluation {
+		triggerType: string;
+		result: boolean;
+		timestamp: number;
+	}
+	let triggerEvaluations: TriggerEvaluation[] = [];
 
-  beforeEach(() => {
-    triggerEvaluations = [];
-  });
+	beforeEach(() => {
+		triggerEvaluations = [];
+	});
 
-  describe("Trigger Engine", () => {
-    it("should evaluate trigger conditions", async () => {
-      const evaluateTrigger = (trigger: any, context: any) => {
-        switch (trigger.type) {
-          case "NEW_MENTION":
-            return context.mentions && context.mentions.length > 0;
-          case "NEW_FOLLOWER":
-            return context.newFollowers && context.newFollowers.length > 0;
-          default:
-            return false;
-        }
-      };
+	describe("Trigger Engine", () => {
+		it("should evaluate trigger conditions", async () => {
+			interface Trigger {
+				type: string;
+			}
+			interface Context {
+				mentions?: unknown[];
+				newFollowers?: unknown[];
+			}
 
-      const result = evaluateTrigger(
-        { type: "NEW_MENTION" },
-        { mentions: [{ id: "1", text: "Hello" }] }
-      );
+			const evaluateTrigger = (trigger: Trigger, context: Context) => {
+				switch (trigger.type) {
+					case "NEW_MENTION":
+						return context.mentions && context.mentions.length > 0;
+					case "NEW_FOLLOWER":
+						return context.newFollowers && context.newFollowers.length > 0;
+					default:
+						return false;
+				}
+			};
 
-      expect(result).toBe(true);
-    });
+			const result = evaluateTrigger(
+				{ type: "NEW_MENTION" },
+				{ mentions: [{ id: "1", text: "Hello" }] },
+			);
 
-    it("should return false when condition not met", async () => {
-      const evaluateTrigger = (trigger: any, context: any) => {
-        return context.mentions && context.mentions.length > 0;
-      };
+			expect(result).toBe(true);
+		});
 
-      const result = evaluateTrigger(
-        { type: "NEW_MENTION" },
-        { mentions: [] }
-      );
+		it("should return false when condition not met", async () => {
+			interface Trigger {
+				type: string;
+			}
+			interface Context {
+				mentions?: unknown[];
+			}
 
-      expect(result).toBe(false);
-    });
-  });
+			const evaluateTrigger = (trigger: Trigger, context: Context) => {
+				return context.mentions && context.mentions.length > 0;
+			};
 
-  describe("NEW_MENTION Trigger", () => {
-    it("should detect new mentions", async () => {
-      const mentions = [
-        { id: "m1", text: "@user hello", author: "@alice", createdAt: Date.now() },
-      ];
+			const result = evaluateTrigger({ type: "NEW_MENTION" }, { mentions: [] });
 
-      const trigger = {
-        type: "NEW_MENTION",
-        config: {},
-      };
+			expect(result).toBe(false);
+		});
+	});
 
-      const shouldTrigger = mentions.length > 0;
+	describe("NEW_MENTION Trigger", () => {
+		it("should detect new mentions", async () => {
+			const mentions = [
+				{
+					id: "m1",
+					text: "@user hello",
+					author: "@alice",
+					createdAt: Date.now(),
+				},
+			];
 
-      expect(shouldTrigger).toBe(true);
-      expect(mentions[0].text).toContain("@user");
-    });
+			const trigger = {
+				type: "NEW_MENTION",
+				config: {},
+			};
 
-    it("should include mention data in context", async () => {
-      const mentionData = {
-        mentionId: "m123",
-        text: "@user thanks for the help!",
-        authorId: "u456",
-        authorUsername: "@alice",
-        createdAt: Date.now(),
-      };
+			const shouldTrigger = mentions.length > 0;
 
-      expect(mentionData.mentionId).toBeDefined();
-      expect(mentionData.authorUsername).toBe("@alice");
-    });
-  });
+			expect(shouldTrigger).toBe(true);
+			expect(mentions[0].text).toContain("@user");
+		});
 
-  describe("NEW_REPLY Trigger", () => {
-    it("should detect new replies to user's posts", async () => {
-      const replies = [
-        { id: "r1", tweetId: "t1", text: "Great post!", author: "@bob" },
-      ];
+		it("should include mention data in context", async () => {
+			const mentionData = {
+				mentionId: "m123",
+				text: "@user thanks for the help!",
+				authorId: "u456",
+				authorUsername: "@alice",
+				createdAt: Date.now(),
+			};
 
-      const shouldTrigger = replies.length > 0;
+			expect(mentionData.mentionId).toBeDefined();
+			expect(mentionData.authorUsername).toBe("@alice");
+		});
+	});
 
-      expect(shouldTrigger).toBe(true);
-    });
-  });
+	describe("NEW_REPLY Trigger", () => {
+		it("should detect new replies to user's posts", async () => {
+			const replies = [
+				{ id: "r1", tweetId: "t1", text: "Great post!", author: "@bob" },
+			];
 
-  describe("POST_REPOSTED Trigger", () => {
-    it("should detect when user's post is retweeted", async () => {
-      const retweets = [
-        { id: "rt1", originalTweetId: "t1", retweetedBy: "@charlie" },
-      ];
+			const shouldTrigger = replies.length > 0;
 
-      const shouldTrigger = retweets.length > 0;
+			expect(shouldTrigger).toBe(true);
+		});
+	});
 
-      expect(shouldTrigger).toBe(true);
-    });
-  });
+	describe("POST_REPOSTED Trigger", () => {
+		it("should detect when user's post is retweeted", async () => {
+			const retweets = [
+				{ id: "rt1", originalTweetId: "t1", retweetedBy: "@charlie" },
+			];
 
-  describe("HIGH_ENGAGEMENT Trigger", () => {
-    it("should trigger when post engagement exceeds threshold", async () => {
-      const post = {
-        id: "t1",
-        likes: 150,
-        replies: 20,
-        retweets: 30,
-        createdAt: Date.now() - 3600000, // 1 hour ago
-      };
+			const shouldTrigger = retweets.length > 0;
 
-      const threshold = 100;
-      const totalEngagement = post.likes + post.replies + post.retweets;
-      const shouldTrigger = totalEngagement > threshold;
+			expect(shouldTrigger).toBe(true);
+		});
+	});
 
-      expect(totalEngagement).toBe(200);
-      expect(shouldTrigger).toBe(true);
-    });
+	describe("HIGH_ENGAGEMENT Trigger", () => {
+		it("should trigger when post engagement exceeds threshold", async () => {
+			const post = {
+				id: "t1",
+				likes: 150,
+				replies: 20,
+				retweets: 30,
+				createdAt: Date.now() - 3600000, // 1 hour ago
+			};
 
-    it("should not trigger when engagement is below threshold", async () => {
-      const post = {
-        likes: 10,
-        replies: 2,
-        retweets: 3,
-      };
+			const threshold = 100;
+			const totalEngagement = post.likes + post.replies + post.retweets;
+			const shouldTrigger = totalEngagement > threshold;
 
-      const threshold = 100;
-      const totalEngagement = post.likes + post.replies + post.retweets;
+			expect(totalEngagement).toBe(200);
+			expect(shouldTrigger).toBe(true);
+		});
 
-      expect(totalEngagement).toBe(15);
-      expect(totalEngagement > threshold).toBe(false);
-    });
-  });
+		it("should not trigger when engagement is below threshold", async () => {
+			const post = {
+				likes: 10,
+				replies: 2,
+				retweets: 3,
+			};
 
-  describe("CONTENT_GAP Trigger", () => {
-    it("should trigger when no posts in last 24 hours", async () => {
-      const lastPostTime = Date.now() - 25 * 60 * 60 * 1000; // 25 hours ago
-      const gapThreshold = 24 * 60 * 60 * 1000; // 24 hours
+			const threshold = 100;
+			const totalEngagement = post.likes + post.replies + post.retweets;
 
-      const shouldTrigger = Date.now() - lastPostTime > gapThreshold;
+			expect(totalEngagement).toBe(15);
+			expect(totalEngagement > threshold).toBe(false);
+		});
+	});
 
-      expect(shouldTrigger).toBe(true);
-    });
+	describe("CONTENT_GAP Trigger", () => {
+		it("should trigger when no posts in last 24 hours", async () => {
+			const lastPostTime = Date.now() - 25 * 60 * 60 * 1000; // 25 hours ago
+			const gapThreshold = 24 * 60 * 60 * 1000; // 24 hours
 
-    it("should not trigger when post is recent", async () => {
-      const lastPostTime = Date.now() - 2 * 60 * 60 * 1000; // 2 hours ago
-      const gapThreshold = 24 * 60 * 60 * 1000;
+			const shouldTrigger = Date.now() - lastPostTime > gapThreshold;
 
-      const shouldTrigger = Date.now() - lastPostTime > gapThreshold;
+			expect(shouldTrigger).toBe(true);
+		});
 
-      expect(shouldTrigger).toBe(false);
-    });
-  });
+		it("should not trigger when post is recent", async () => {
+			const lastPostTime = Date.now() - 2 * 60 * 60 * 1000; // 2 hours ago
+			const gapThreshold = 24 * 60 * 60 * 1000;
 
-  describe("OPTIMAL_POST_TIME Trigger", () => {
-    it("should trigger at optimal posting time", async () => {
-      const now = new Date();
-      const optimalHour = 9; // 9 AM
+			const shouldTrigger = Date.now() - lastPostTime > gapThreshold;
 
-      const isOptimalTime = now.getHours() === optimalHour;
+			expect(shouldTrigger).toBe(false);
+		});
+	});
 
-      // This will depend on when test runs, so we just check the logic
-      expect(typeof isOptimalTime).toBe("boolean");
-    });
-  });
+	describe("OPTIMAL_POST_TIME Trigger", () => {
+		it("should trigger at optimal posting time", async () => {
+			const now = new Date();
+			const optimalHour = 9; // 9 AM
 
-  describe("UNFOLLOW_DETECTED Trigger", () => {
-    it("should detect unfollows", async () => {
-      const previousCount = 1000;
-      const currentCount = 995;
+			const isOptimalTime = now.getHours() === optimalHour;
 
-      const unfollows = previousCount - currentCount;
-      const shouldTrigger = unfollows > 0;
+			// This will depend on when test runs, so we just check the logic
+			expect(typeof isOptimalTime).toBe("boolean");
+		});
+	});
 
-      expect(unfollows).toBe(5);
-      expect(shouldTrigger).toBe(true);
-    });
-  });
+	describe("UNFOLLOW_DETECTED Trigger", () => {
+		it("should detect unfollows", async () => {
+			const previousCount = 1000;
+			const currentCount = 995;
 
-  describe("NEW_DM Trigger", () => {
-    it("should detect new direct messages", async () => {
-      const dms = [
-        { id: "dm1", sender: "@dave", text: "Hello!", createdAt: Date.now() },
-      ];
+			const unfollows = previousCount - currentCount;
+			const shouldTrigger = unfollows > 0;
 
-      const shouldTrigger = dms.length > 0;
+			expect(unfollows).toBe(5);
+			expect(shouldTrigger).toBe(true);
+		});
+	});
 
-      expect(shouldTrigger).toBe(true);
-    });
-  });
+	describe("NEW_DM Trigger", () => {
+		it("should detect new direct messages", async () => {
+			const dms = [
+				{ id: "dm1", sender: "@dave", text: "Hello!", createdAt: Date.now() },
+			];
 
-  describe("MANUAL_TRIGGER Trigger", () => {
-    it("should trigger when user clicks button", async () => {
-      const manualTriggerRequested = true;
+			const shouldTrigger = dms.length > 0;
 
-      const shouldTrigger = manualTriggerRequested;
+			expect(shouldTrigger).toBe(true);
+		});
+	});
 
-      expect(shouldTrigger).toBe(true);
-    });
-  });
+	describe("MANUAL_TRIGGER Trigger", () => {
+		it("should trigger when user clicks button", async () => {
+			const manualTriggerRequested = true;
 
-  describe("NEGATIVE_SENTIMENT Trigger", () => {
-    it("should detect negative sentiment in mentions", async () => {
-      const mention = {
-        text: "@user this is terrible service!",
-        sentiment: "negative",
-      };
+			const shouldTrigger = manualTriggerRequested;
 
-      const negativeWords = ["terrible", "awful", "bad", "hate", "worst"];
-      const hasNegativeSentiment = negativeWords.some((word) =>
-        mention.text.toLowerCase().includes(word)
-      );
+			expect(shouldTrigger).toBe(true);
+		});
+	});
 
-      expect(hasNegativeSentiment).toBe(true);
-    });
+	describe("NEGATIVE_SENTIMENT Trigger", () => {
+		it("should detect negative sentiment in mentions", async () => {
+			const mention = {
+				text: "@user this is terrible service!",
+				sentiment: "negative",
+			};
 
-    it("should not trigger on positive mentions", async () => {
-      const mention = {
-        text: "@user great job! love it",
-        sentiment: "positive",
-      };
+			const negativeWords = ["terrible", "awful", "bad", "hate", "worst"];
+			const hasNegativeSentiment = negativeWords.some((word) =>
+				mention.text.toLowerCase().includes(word),
+			);
 
-      const negativeWords = ["terrible", "awful", "bad", "hate", "worst"];
-      const hasNegativeSentiment = negativeWords.some((word) =>
-        mention.text.toLowerCase().includes(word)
-      );
+			expect(hasNegativeSentiment).toBe(true);
+		});
 
-      expect(hasNegativeSentiment).toBe(false);
-    });
-  });
+		it("should not trigger on positive mentions", async () => {
+			const mention = {
+				text: "@user great job! love it",
+				sentiment: "positive",
+			};
 
-  describe("LINK_BROKEN Trigger", () => {
-    it("should detect broken links in bio or posts", async () => {
-      const links = [
-        { url: "https://example.com/broken", status: 404 },
-        { url: "https://example.com/working", status: 200 },
-      ];
+			const negativeWords = ["terrible", "awful", "bad", "hate", "worst"];
+			const hasNegativeSentiment = negativeWords.some((word) =>
+				mention.text.toLowerCase().includes(word),
+			);
 
-      const brokenLinks = links.filter((link) => link.status >= 400);
+			expect(hasNegativeSentiment).toBe(false);
+		});
+	});
 
-      expect(brokenLinks.length).toBe(1);
-      expect(brokenLinks[0].url).toBe("https://example.com/broken");
-    });
-  });
+	describe("LINK_BROKEN Trigger", () => {
+		it("should detect broken links in bio or posts", async () => {
+			const links = [
+				{ url: "https://example.com/broken", status: 404 },
+				{ url: "https://example.com/working", status: 200 },
+			];
 
-  describe("Trigger Evaluation Service", () => {
-    it("should evaluate multiple triggers for a workflow", async () => {
-      const workflow = {
-        triggers: [
-          { type: "NEW_MENTION", enabled: true },
-          { type: "NEW_FOLLOWER", enabled: false },
-        ],
-      };
+			const brokenLinks = links.filter((link) => link.status >= 400);
 
-      const context = {
-        mentions: [{ id: "1" }],
-        newFollowers: [],
-      };
+			expect(brokenLinks.length).toBe(1);
+			expect(brokenLinks[0].url).toBe("https://example.com/broken");
+		});
+	});
 
-      const results = workflow.triggers.map((trigger) => ({
-        trigger,
-        triggered:
-          trigger.enabled &&
-          (trigger.type === "NEW_MENTION"
-            ? context.mentions.length > 0
-            : context.newFollowers.length > 0),
-      }));
+	describe("Trigger Evaluation Service", () => {
+		it("should evaluate multiple triggers for a workflow", async () => {
+			const workflow = {
+				triggers: [
+					{ type: "NEW_MENTION", enabled: true },
+					{ type: "NEW_FOLLOWER", enabled: false },
+				],
+			};
 
-      expect(results[0].triggered).toBe(true); // NEW_MENTION triggered
-      expect(results[1].triggered).toBe(false); // NEW_FOLLOWER disabled
-    });
+			const context = {
+				mentions: [{ id: "1" }],
+				newFollowers: [],
+			};
 
-    it("should pass trigger data to actions", async () => {
-      const triggerData = {
-        triggerType: "NEW_MENTION",
-        mentionId: "m123",
-        author: "@alice",
-        text: "Hello @user!",
-      };
+			const results = workflow.triggers.map((trigger) => ({
+				trigger,
+				triggered:
+					trigger.enabled &&
+					(trigger.type === "NEW_MENTION"
+						? context.mentions.length > 0
+						: context.newFollowers.length > 0),
+			}));
 
-      expect(triggerData.triggerType).toBe("NEW_MENTION");
-      expect(triggerData.mentionId).toBe("m123");
-    });
-  });
+			expect(results[0].triggered).toBe(true); // NEW_MENTION triggered
+			expect(results[1].triggered).toBe(false); // NEW_FOLLOWER disabled
+		});
 
-  describe("Trigger Configuration", () => {
-    it("should support trigger-specific config", async () => {
-      const trigger = {
-        type: "HIGH_ENGAGEMENT",
-        config: {
-          threshold: 50,
-          timeWindow: "1h",
-        },
-      };
+		it("should pass trigger data to actions", async () => {
+			const triggerData = {
+				triggerType: "NEW_MENTION",
+				mentionId: "m123",
+				author: "@alice",
+				text: "Hello @user!",
+			};
 
-      expect(trigger.config.threshold).toBe(50);
-      expect(trigger.config.timeWindow).toBe("1h");
-    });
+			expect(triggerData.triggerType).toBe("NEW_MENTION");
+			expect(triggerData.mentionId).toBe("m123");
+		});
+	});
 
-    it("should respect enabled/disabled state", async () => {
-      const trigger = {
-        type: "NEW_MENTION",
-        enabled: false,
-      };
+	describe("Trigger Configuration", () => {
+		it("should support trigger-specific config", async () => {
+			const trigger = {
+				type: "HIGH_ENGAGEMENT",
+				config: {
+					threshold: 50,
+					timeWindow: "1h",
+				},
+			};
 
-      expect(trigger.enabled).toBe(false);
-    });
-  });
+			expect(trigger.config.threshold).toBe(50);
+			expect(trigger.config.timeWindow).toBe("1h");
+		});
+
+		it("should respect enabled/disabled state", async () => {
+			const trigger = {
+				type: "NEW_MENTION",
+				enabled: false,
+			};
+
+			expect(trigger.enabled).toBe(false);
+		});
+	});
 });
