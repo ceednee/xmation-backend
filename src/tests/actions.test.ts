@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from "bun:test";
 
 describe("Actions System", () => {
@@ -40,7 +41,7 @@ describe("Actions System", () => {
 				}
 			};
 
-			const result = await executeAction({ type: "SEND_DM", config: {} }, {});
+			const result = await executeAction({ type: "SEND_DM", config: {} });
 
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("API Error");
@@ -278,7 +279,7 @@ describe("Actions System", () => {
 				lt: (a, b) => a < b,
 				gte: (a, b) => a >= b,
 				lte: (a, b) => a <= b,
-				contains: (a, b) => String(a).includes(b),
+				contains: (a, b) => String(a).includes(String(b)),
 			};
 
 			expect(operators.eq(5, 5)).toBe(true);
