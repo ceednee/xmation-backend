@@ -66,7 +66,13 @@ export const triggerRoutes = new Elysia({ prefix: "/triggers" })
 	.post(
 		"/test",
 		async ({ body, request }: Context) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const b = body as {
 				triggerType: TriggerType;
 				config?: Record<string, unknown>;
@@ -145,7 +151,13 @@ export const triggerRoutes = new Elysia({ prefix: "/triggers" })
 				};
 			}
 
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const b = body as { xUserId?: string; context?: Record<string, unknown> };
 
 			const contextData = b.context || {};

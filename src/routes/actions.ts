@@ -93,7 +93,13 @@ export const actionRoutes = new Elysia({ prefix: "/actions" })
 	.post(
 		"/test",
 		async ({ body, request }: Context) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const b = body as {
 				actionType: ActionType;
 				config: Record<string, unknown>;

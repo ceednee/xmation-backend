@@ -11,7 +11,13 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 
 	// GET /sync/status - Get sync status
 	.get("/status", async ({ request }: Context) => {
-		const userId = request.headers.get("x-user-id") || "user_123";
+		const userId = request.headers.get("x-user-id");
+		if (!userId) {
+			return {
+				success: false,
+				error: { code: "NO_USER", message: "User ID required" },
+			};
+		}
 		const status = await syncService.getSyncStatus(userId);
 
 		return {
@@ -27,7 +33,13 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 			request,
 			body,
 		}: Context & { body: { sinceId?: string } | null }) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const sinceId = body?.sinceId;
 
 			const mentions = await syncService.syncMentions(userId, sinceId);
@@ -56,7 +68,13 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 			request,
 			body,
 		}: Context & { body: { xUserId?: string } | null }) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const xUserId = body?.xUserId || request.headers.get("x-x-user-id");
 
 			if (!xUserId) {
@@ -93,7 +111,13 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 			request,
 			body,
 		}: Context & { body: { screenName?: string } | null }) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const screenName =
 				body?.screenName || request.headers.get("x-x-username");
 
@@ -135,7 +159,13 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 		}: Context & {
 			body: { xUserId?: string; screenName?: string } | null;
 		}) => {
-			const userId = request.headers.get("x-user-id") || "user_123";
+			const userId = request.headers.get("x-user-id");
+			if (!userId) {
+				return {
+					success: false,
+					error: { code: "NO_USER", message: "User ID required" },
+				};
+			}
 			const xUserId = body?.xUserId || request.headers.get("x-x-user-id");
 			const screenName =
 				body?.screenName || request.headers.get("x-x-username");
