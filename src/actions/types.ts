@@ -1,48 +1,71 @@
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ActionOutput {
+	[key: string]: unknown;
+}
+
 // Action execution result
 export interface ActionResult {
-  success: boolean;
-  actionType: string;
-  output?: Record<string, any>;
-  error?: string;
-  executionTimeMs: number;
+	success: boolean;
+	actionType: string;
+	output?: Record<string, unknown>;
+	error?: string;
+	executionTimeMs: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ActionConfig {
+	[key: string]: unknown;
 }
 
 // Action executor function type
 export type ActionExecutor = (
-  config: Record<string, any>,
-  context: ActionContext
+	config: Record<string, unknown>,
+	context: ActionContext,
 ) => Promise<ActionResult> | ActionResult;
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface TriggerData {
+	[key: string]: unknown;
+}
 
 // Context passed to action executors
 export interface ActionContext {
-  userId: string;
-  xUserId?: string;
-  workflowId: string;
-  runId: string;
-  triggerData: Record<string, any>;
-  previousResults?: ActionResult[];
-  dryRun: boolean;
+	userId: string;
+	xUserId?: string;
+	workflowId: string;
+	runId: string;
+	triggerData: Record<string, TriggerData>;
+	previousResults?: ActionResult[];
+	dryRun: boolean;
 }
 
 // Action definition
 export interface ActionDefinition {
-  type: string;
-  name: string;
-  description: string;
-  executor: ActionExecutor;
-  defaultConfig?: Record<string, any>;
-  requiredConfig?: string[];
+	type: string;
+	name: string;
+	description: string;
+	executor: ActionExecutor;
+	defaultConfig?: Record<string, unknown>;
+	requiredConfig?: string[];
+}
+
+// X API response type - allows any additional properties
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface XApiResponse extends Record<string, unknown> {
+	id?: string;
+	success?: boolean;
+	data?: unknown;
 }
 
 // X API Client interface (to be implemented)
 export interface XApiClient {
-  replyToTweet: (tweetId: string, text: string) => Promise<any>;
-  retweet: (tweetId: string) => Promise<any>;
-  quoteTweet: (tweetId: string, comment: string) => Promise<any>;
-  sendDM: (userId: string, text: string) => Promise<any>;
-  followUser: (userId: string) => Promise<any>;
-  pinTweet: (tweetId: string) => Promise<any>;
-  addToList: (listId: string, userId: string) => Promise<any>;
-  blockUser: (userId: string) => Promise<any>;
-  reportSpam: (userId: string, reason: string) => Promise<any>;
+	replyToTweet: (tweetId: string, text: string) => Promise<XApiResponse>;
+	retweet: (tweetId: string) => Promise<XApiResponse>;
+	quoteTweet: (tweetId: string, comment: string) => Promise<XApiResponse>;
+	sendDM: (userId: string, text: string) => Promise<XApiResponse>;
+	followUser: (userId: string) => Promise<XApiResponse>;
+	pinTweet: (tweetId: string) => Promise<XApiResponse>;
+	addToList: (listId: string, userId: string) => Promise<XApiResponse>;
+	blockUser: (userId: string) => Promise<XApiResponse>;
+	reportSpam: (userId: string, reason: string) => Promise<XApiResponse>;
 }
