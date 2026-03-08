@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { type Context, Elysia, t } from "elysia";
 import { protectedRoute } from "../middleware/convex-auth";
 import type {
@@ -172,7 +173,8 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	)
 
 	// GET /workflows/:id - Get workflow
-	.get("/:id", ({ params, set }: Context & { params: { id: string } }) => {
+	.get("/:id", ({ params, request, set }: Context & { params: { id: string } }) => {
+		const userId = request.headers.get("x-user-id");
 		const workflow = workflowsStore.get(params.id);
 
 		if (!workflow) {
@@ -182,6 +184,18 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				error: {
 					code: "NOT_FOUND",
 					message: "Workflow not found",
+				},
+			};
+		}
+
+		// ✅ Authorization check: Only allow access to own workflows
+		if (workflow.userId !== userId) {
+			set.status = 403;
+			return {
+				success: false,
+				error: {
+					code: "FORBIDDEN",
+					message: "Access denied",
 				},
 			};
 		}
@@ -198,8 +212,10 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 		async ({
 			params,
 			body,
+			request,
 			set,
 		}: Context & { params: { id: string }; body: UpdateWorkflowBody }) => {
+			const userId = request.headers.get("x-user-id");
 			const workflow = workflowsStore.get(params.id);
 
 			if (!workflow) {
@@ -207,6 +223,18 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				return {
 					success: false,
 					error: { code: "NOT_FOUND", message: "Workflow not found" },
+				};
+			}
+
+			// ✅ Authorization check: Only allow modifying own workflows
+			if (workflow.userId !== userId) {
+				set.status = 403;
+				return {
+					success: false,
+					error: {
+						code: "FORBIDDEN",
+						message: "Access denied",
+					},
 				};
 			}
 
@@ -236,7 +264,8 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	)
 
 	// DELETE /workflows/:id - Delete workflow
-	.delete("/:id", ({ params, set }: Context & { params: { id: string } }) => {
+	.delete("/:id", ({ params, request, set }: Context & { params: { id: string } }) => {
+		const userId = request.headers.get("x-user-id");
 		const workflow = workflowsStore.get(params.id);
 
 		if (!workflow) {
@@ -244,6 +273,18 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 			return {
 				success: false,
 				error: { code: "NOT_FOUND", message: "Workflow not found" },
+			};
+		}
+
+		// ✅ Authorization check: Only allow deleting own workflows
+		if (workflow.userId !== userId) {
+			set.status = 403;
+			return {
+				success: false,
+				error: {
+					code: "FORBIDDEN",
+					message: "Access denied",
+				},
 			};
 		}
 
@@ -258,7 +299,8 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// POST /workflows/:id/activate - Activate workflow
 	.post(
 		"/:id/activate",
-		({ params, set }: Context & { params: { id: string } }) => {
+		({ params, request, set }: Context & { params: { id: string } }) => {
+			const userId = request.headers.get("x-user-id");
 			const workflow = workflowsStore.get(params.id);
 
 			if (!workflow) {
@@ -266,6 +308,18 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				return {
 					success: false,
 					error: { code: "NOT_FOUND", message: "Workflow not found" },
+				};
+			}
+
+			// ✅ Authorization check
+			if (workflow.userId !== userId) {
+				set.status = 403;
+				return {
+					success: false,
+					error: {
+						code: "FORBIDDEN",
+						message: "Access denied",
+					},
 				};
 			}
 
@@ -316,7 +370,8 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// POST /workflows/:id/pause - Pause workflow
 	.post(
 		"/:id/pause",
-		({ params, set }: Context & { params: { id: string } }) => {
+		({ params, request, set }: Context & { params: { id: string } }) => {
+			const userId = request.headers.get("x-user-id");
 			const workflow = workflowsStore.get(params.id);
 
 			if (!workflow) {
@@ -324,6 +379,18 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				return {
 					success: false,
 					error: { code: "NOT_FOUND", message: "Workflow not found" },
+				};
+			}
+
+			// ✅ Authorization check
+			if (workflow.userId !== userId) {
+				set.status = 403;
+				return {
+					success: false,
+					error: {
+						code: "FORBIDDEN",
+						message: "Access denied",
+					},
 				};
 			}
 
@@ -352,8 +419,10 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 		({
 			params,
 			body,
+			request,
 			set,
 		}: Context & { params: { id: string }; body: TestWorkflowBody | null }) => {
+			const userId = request.headers.get("x-user-id");
 			const workflow = workflowsStore.get(params.id);
 
 			if (!workflow) {
@@ -361,6 +430,18 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				return {
 					success: false,
 					error: { code: "NOT_FOUND", message: "Workflow not found" },
+				};
+			}
+
+			// ✅ Authorization check
+			if (workflow.userId !== userId) {
+				set.status = 403;
+				return {
+					success: false,
+					error: {
+						code: "FORBIDDEN",
+						message: "Access denied",
+					},
 				};
 			}
 

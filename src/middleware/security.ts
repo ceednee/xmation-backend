@@ -29,6 +29,21 @@ export const securityHeaders = (app: Elysia) => {
 				"max-age=31536000; includeSubDomains; preload";
 		}
 
+		// Content Security Policy (CSP) - prevents XSS and injection attacks
+		set.headers["Content-Security-Policy"] = [
+			"default-src 'self'",
+			"script-src 'self'",
+			"style-src 'self' 'unsafe-inline'",
+			"img-src 'self' data: https:",
+			"font-src 'self'",
+			"connect-src 'self'",
+			"media-src 'self'",
+			"object-src 'none'",
+			"frame-ancestors 'none'",
+			"base-uri 'self'",
+			"form-action 'self'",
+		].join("; ");
+
 		// Remove server fingerprinting
 		delete set.headers["Server"];
 		delete set.headers["X-Powered-By"];

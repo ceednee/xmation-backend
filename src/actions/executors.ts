@@ -40,13 +40,24 @@ const replaceTemplates = (text: string, context: ActionContext): string => {
 		}
 		// Check trigger data nested (e.g., authorUsername)
 		if (triggerData.authorUsername && key === "authorUsername") {
-			return String(triggerData.authorUsername);
+			return sanitizeXss(String(triggerData.authorUsername));
 		}
 		if (triggerData.followerUsername && key === "followerUsername") {
-			return String(triggerData.followerUsername);
+			return sanitizeXss(String(triggerData.followerUsername));
 		}
 		return match;
 	});
+};
+
+// XSS sanitization - removes HTML/Script tags to prevent injection
+const sanitizeXss = (text: string): string => {
+	return text
+		.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+		.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+		.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+		.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+		.replace(/javascript:/gi, '')
+		.replace(/on\w+\s*=/gi, '');
 };
 
 // Mock X API client (for dry-run or when no token available)

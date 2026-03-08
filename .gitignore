@@ -35,3 +35,4 @@ coverage/
 
 # Bun
 bun.lockb
+.env

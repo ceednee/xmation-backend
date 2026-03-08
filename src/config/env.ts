@@ -9,10 +9,17 @@ const envSchema = z.object({
 	CONVEX_URL: z.string().url().default("http://localhost:3210"),
 	X_CLIENT_ID: z.string().min(1, "X_CLIENT_ID is required"),
 	X_CLIENT_SECRET: z.string().min(1, "X_CLIENT_SECRET is required"),
-	ENCRYPTION_KEY: z
-		.string()
-		.min(32)
-		.default("test-32-character-encryption-key-here"),
+	ENCRYPTION_KEY: z.string().min(32).refine(
+		(val) => {
+			// Reject weak/default keys in production
+			const lowerVal = val.toLowerCase();
+			return !lowerVal.includes('test') && 
+			       !lowerVal.includes('default') && 
+			       !lowerVal.includes('example') &&
+			       !lowerVal.includes('changeme');
+		},
+		{ message: "ENCRYPTION_KEY must be a strong production key (not test/default/example/changeme)" }
+	),
 	REDIS_URL: z.string().url().default("redis://localhost:6379"),
 	RAPIDAPI_KEY: z.string().min(1, "RAPIDAPI_KEY is required"),
 	UPSTASH_REDIS_REST_URL: z.string().url().optional(),
