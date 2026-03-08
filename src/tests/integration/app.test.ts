@@ -29,7 +29,7 @@ describe("App Setup", () => {
 		const body = await response.json();
 
 		expect(body.version).toBe("1.0.0");
-		expect(body.service).toBe("x-automation-api");
+		expect(body.service).toBe("xmation-backend");
 	});
 
 	it("should have root endpoint with API info", async () => {

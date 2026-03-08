@@ -12,7 +12,7 @@ import workflowRoutes from "./routes/workflows";
 const healthRoutes = new Elysia({ prefix: "/health" }).get("/", () => ({
 	status: "ok",
 	version: "1.0.0",
-	service: "x-automation-api",
+	service: "xmation-backend",
 	timestamp: Date.now(),
 }));
 
