@@ -49,23 +49,52 @@ export interface ActionDefinition {
 	requiredConfig?: string[];
 }
 
-// X API response type - allows any additional properties
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface XApiResponse extends Record<string, unknown> {
-	id?: string;
-	success?: boolean;
-	data?: unknown;
+// X API response type - using any for flexibility with external API
+// biome-ignore lint/suspicious/noExplicitAny: X API responses vary widely
+export type XApiResponse = any;
+
+// Create tweet options type
+export interface CreateTweetOptions {
+	reply?: { in_reply_to_tweet_id: string };
+	quote_tweet_id?: string;
 }
 
-// X API Client interface (to be implemented)
+// Pagination options
+export interface PaginationOptions {
+	max_results?: number;
+	pagination_token?: string;
+}
+
+// X API Client interface - matches real X API implementation
+// Using any return types to match real API responses
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface XApiClient {
-	replyToTweet: (tweetId: string, text: string) => Promise<XApiResponse>;
-	retweet: (tweetId: string) => Promise<XApiResponse>;
-	quoteTweet: (tweetId: string, comment: string) => Promise<XApiResponse>;
+	createTweet: (
+		text: string,
+		options?: CreateTweetOptions,
+	) => Promise<XApiResponse>;
+	likeTweet: (tweetId: string, userId: string) => Promise<XApiResponse>;
+	retweet: (tweetId: string, userId: string) => Promise<XApiResponse>;
 	sendDM: (userId: string, text: string) => Promise<XApiResponse>;
-	followUser: (userId: string) => Promise<XApiResponse>;
+	followUser: (targetUserId: string, userId: string) => Promise<XApiResponse>;
+	getFollowers: (
+		userId: string,
+		options?: PaginationOptions,
+	) => Promise<XApiResponse>;
+	getMentions: (
+		userId: string,
+		options?: PaginationOptions,
+	) => Promise<XApiResponse>;
+	getUserTweets: (
+		userId: string,
+		options?: PaginationOptions,
+	) => Promise<XApiResponse>;
+	getAuthenticatedUser: () => Promise<XApiResponse>;
+	blockUser: (targetUserId: string, userId: string) => Promise<XApiResponse>;
+	// Convenience methods for action executors
+	replyToTweet: (tweetId: string, text: string) => Promise<XApiResponse>;
+	quoteTweet: (tweetId: string, comment: string) => Promise<XApiResponse>;
 	pinTweet: (tweetId: string) => Promise<XApiResponse>;
 	addToList: (listId: string, userId: string) => Promise<XApiResponse>;
-	blockUser: (userId: string) => Promise<XApiResponse>;
 	reportSpam: (userId: string, reason: string) => Promise<XApiResponse>;
 }

@@ -1,4 +1,8 @@
+import { ConvexHttpClient } from "convex/browser";
+import { config } from "../config/env";
+import { decrypt } from "../services/encryption";
 import { createXApiClient } from "../services/x-api-client";
+import { refreshAccessToken } from "../services/x-oauth";
 import type {
 	ActionContext,
 	ActionDefinition,
@@ -6,6 +10,10 @@ import type {
 	ActionResult,
 	XApiClient,
 } from "./types";
+
+// Import Convex API
+// @ts-nocheck - Generated API types are complex
+import { api } from "../../convex/_generated/api";
 
 // Helper to create result
 const createResult = (
@@ -44,20 +52,54 @@ const replaceTemplates = (text: string, context: ActionContext): string => {
 // Mock X API client (for dry-run or when no token available)
 const createMockXClient = (): XApiClient => {
 	return {
-		replyToTweet: async (tweetId: string, text: string) => {
-			return { id: "mock_reply_id", text, tweetId };
+		createTweet: async (text: string) => {
+			return { data: { id: `mock_tweet_${Date.now()}`, text } };
 		},
-		retweet: async (tweetId: string) => {
-			return { id: "mock_retweet_id", tweetId };
+		likeTweet: async (tweetId: string) => {
+			return { data: { liked: true, tweetId } };
 		},
-		quoteTweet: async (tweetId: string, comment: string) => {
-			return { id: "mock_quote_id", comment, tweetId };
+		retweet: async (tweetId: string, _userId: string) => {
+			return { data: { retweeted: true, tweetId } };
 		},
 		sendDM: async (userId: string, text: string) => {
-			return { id: "mock_dm_id", text, recipientId: userId };
+			return {
+				data: { id: `mock_dm_${Date.now()}`, text, recipientId: userId },
+			};
 		},
-		followUser: async (userId: string) => {
-			return { following: true, userId };
+		followUser: async (targetUserId: string, _userId: string) => {
+			return { data: { following: true, userId: targetUserId } };
+		},
+		getFollowers: async (userId: string) => {
+			return {
+				data: [{ id: "mock_follower", username: "mockuser" }],
+				meta: {},
+			};
+		},
+		getMentions: async (userId: string) => {
+			return { data: [], meta: {} };
+		},
+		getUserTweets: async (userId: string) => {
+			return { data: [], meta: {} };
+		},
+		getAuthenticatedUser: async () => {
+			return { data: { id: "mock_user", username: "mockuser" } };
+		},
+		blockUser: async (targetUserId: string, _userId: string) => {
+			return { data: { blocked: true, userId: targetUserId } };
+		},
+		replyToTweet: async (tweetId: string, text: string) => {
+			return {
+				data: { id: `mock_reply_${Date.now()}`, text, replyTo: tweetId },
+			};
+		},
+		quoteTweet: async (tweetId: string, comment: string) => {
+			return {
+				data: {
+					id: `mock_quote_${Date.now()}`,
+					text: comment,
+					quoteOf: tweetId,
+				},
+			};
 		},
 		pinTweet: async (tweetId: string) => {
 			return { pinned: true, tweetId };
@@ -65,13 +107,20 @@ const createMockXClient = (): XApiClient => {
 		addToList: async (listId: string, userId: string) => {
 			return { added: true, listId, userId };
 		},
-		blockUser: async (userId: string) => {
-			return { blocked: true, userId };
-		},
 		reportSpam: async (userId: string, reason: string) => {
 			return { reported: true, userId, reason };
 		},
 	};
+};
+
+// Convex client singleton
+let convexClient: ConvexHttpClient | null = null;
+
+const getConvexClient = (): ConvexHttpClient => {
+	if (!convexClient) {
+		convexClient = new ConvexHttpClient(config.CONVEX_URL);
+	}
+	return convexClient;
 };
 
 // Get X API client (real or mock based on dry-run)
@@ -81,17 +130,66 @@ const getXClient = async (context: ActionContext): Promise<XApiClient> => {
 		return createMockXClient();
 	}
 
-	// TODO: Get user's X access token from Convex
-	// For production, fetch decrypted token from Convex using context.userId
-	// const convex = new ConvexHttpClient(config.CONVEX_URL);
-	// const tokens = await convex.query(api.users.getXTokens, { userId: context.userId });
-	// if (!tokens) throw new Error("X not connected");
-	// const accessToken = decrypt(tokens.xAccessToken);
-	// return createXApiClient(accessToken);
+	// Fetch user's X tokens from Convex
+	const convex = getConvexClient();
 
-	// For now, return mock client until Convex integration is complete
-	console.warn("[X API] Using mock client - real X API integration pending");
-	return createMockXClient();
+	try {
+		// Fetch tokens from Convex
+		const tokens = (await convex.query(api.users.getXTokens, {
+			userId: context.userId,
+		} as never)) as {
+			xAccessToken?: string;
+			xRefreshToken?: string;
+			xTokenExpiresAt?: number;
+		} | null;
+
+		if (!tokens?.xAccessToken) {
+			throw new Error("X not connected - no access token found");
+		}
+
+		// Decrypt the access token
+		const accessToken = decrypt(tokens.xAccessToken);
+
+		// Check if token needs refresh (expires in next 5 minutes)
+		const needsRefresh =
+			tokens.xTokenExpiresAt &&
+			tokens.xTokenExpiresAt < Date.now() + 5 * 60 * 1000;
+
+		if (needsRefresh && tokens.xRefreshToken) {
+			console.log("[X API] Token expiring soon, refreshing...");
+			const refreshToken = decrypt(tokens.xRefreshToken);
+			const newTokens = await refreshAccessToken(refreshToken);
+
+			// Encrypt and store new tokens (fire and forget)
+			const { encryptXTokens } = await import("../services/encryption");
+			const encrypted = encryptXTokens(
+				newTokens.access_token,
+				newTokens.refresh_token,
+			);
+
+			// Update tokens in Convex (don't await to not block)
+			convex
+				.mutation(api.users.updateXTokens, {
+					xAccessToken: encrypted.xAccessToken,
+					xRefreshToken: encrypted.xRefreshToken,
+					xTokenExpiresAt: Date.now() + newTokens.expires_in * 1000,
+				})
+				.catch((err: Error) => {
+					console.error("[X API] Failed to update tokens:", err);
+				});
+
+			// Return client with new token
+			return createXApiClient(newTokens.access_token) as XApiClient;
+		}
+
+		// Return client with existing token
+		return createXApiClient(accessToken);
+	} catch (error) {
+		console.error("[X API] Failed to get X client:", error);
+		throw error instanceof Error
+			? error
+			: new Error("Failed to get X API client");
+	}
 };
 
 // 1. REPLY_TO_TWEET - Reply to a tweet
@@ -155,7 +253,7 @@ export const retweetExecutor: ActionExecutor = async (config, context) => {
 			);
 		}
 
-		const result = await xClient.retweet(tweetId);
+		const result = await xClient.retweet(tweetId, context.userId);
 
 		return createResult(true, "RETWEET", Date.now() - start, {
 			retweetId: result.id,
@@ -269,7 +367,7 @@ export const followUserExecutor: ActionExecutor = async (config, context) => {
 			);
 		}
 
-		const result = await xClient.followUser(userId);
+		const result = await xClient.followUser(userId, context.userId);
 
 		return createResult(true, "FOLLOW_USER", Date.now() - start, {
 			userId,
@@ -305,7 +403,7 @@ export const followBackExecutor: ActionExecutor = async (config, context) => {
 			);
 		}
 
-		const result = await xClient.followUser(userId);
+		const result = await xClient.followUser(userId, context.userId);
 
 		return createResult(true, "FOLLOW_BACK", Date.now() - start, {
 			userId,
@@ -676,7 +774,7 @@ export const blockUserExecutor: ActionExecutor = async (config, context) => {
 			);
 		}
 
-		const result = await xClient.blockUser(userId);
+		const result = await xClient.blockUser(userId, context.userId);
 
 		return createResult(true, "BLOCK_USER", Date.now() - start, {
 			userId,
