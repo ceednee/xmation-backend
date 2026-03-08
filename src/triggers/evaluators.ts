@@ -20,18 +20,31 @@ const createResult = (
 // 1. NEW_MENTION - Someone @mentions you
 export const newMentionEvaluator: TriggerEvaluator = (config, context) => {
 	const mentions = context.mentions || [];
-	const newMentions = mentions.filter(
+	let filteredMentions = mentions.filter(
 		(m) => m.createdAt > (context.currentTime || Date.now()) - 60000, // Last minute
 	);
 
-	if (newMentions.length === 0) {
+	// Filter by keywords if specified
+	const keywords = Array.isArray(config.keywords) 
+		? config.keywords.filter((k): k is string => typeof k === "string")
+		: [];
+	
+	if (keywords.length > 0) {
+		filteredMentions = filteredMentions.filter((m) =>
+			keywords.some((keyword: string) =>
+				m.text.toLowerCase().includes(keyword.toLowerCase())
+			)
+		);
+	}
+
+	if (filteredMentions.length === 0) {
 		return createResult(false, "NEW_MENTION");
 	}
 
 	return createResult(true, "NEW_MENTION", {
-		mentions: newMentions,
-		count: newMentions.length,
-		latestMention: newMentions[0],
+		mentions: filteredMentions,
+		count: filteredMentions.length,
+		latestMention: filteredMentions[0],
 	});
 };
 
@@ -193,7 +206,23 @@ export const newDMEvaluator: TriggerEvaluator = (config, context) => {
 	});
 };
 
-// 9. MANUAL_TRIGGER - User clicks button
+// 9. NEW_FOLLOWER - Someone follows you
+export const newFollowerEvaluator: TriggerEvaluator = (config, context) => {
+	const newFollowers = context.newFollowers || [];
+	const minFollowers = Number(config.minFollowers) || 1;
+
+	if (newFollowers.length < minFollowers) {
+		return createResult(false, "NEW_FOLLOWER");
+	}
+
+	return createResult(true, "NEW_FOLLOWER", {
+		followers: newFollowers,
+		count: newFollowers.length,
+		latestFollower: newFollowers[0],
+	});
+};
+
+// 10. MANUAL_TRIGGER - User clicks button
 export const manualTriggerEvaluator: TriggerEvaluator = (config, context) => {
 	if (!context.manualTrigger) {
 		return createResult(false, "MANUAL_TRIGGER");
@@ -205,7 +234,7 @@ export const manualTriggerEvaluator: TriggerEvaluator = (config, context) => {
 	});
 };
 
-// 10. NEGATIVE_SENTIMENT - Bad sentiment detected
+// 11. NEGATIVE_SENTIMENT - Bad sentiment detected
 export const negativeSentimentEvaluator: TriggerEvaluator = (
 	config,
 	context,
@@ -250,7 +279,7 @@ export const negativeSentimentEvaluator: TriggerEvaluator = (
 	});
 };
 
-// 11. LINK_BROKEN - Bio or post link is broken
+// 12. LINK_BROKEN - Bio or post link is broken
 export const linkBrokenEvaluator: TriggerEvaluator = (config, context) => {
 	const links = context.links || [];
 	const brokenLinks = links.filter((link) => link.status >= 400);
@@ -341,6 +370,16 @@ export const triggerRegistry: Map<string, TriggerDefinition> = new Map([
 			name: "New DM",
 			description: "Triggered when you receive a direct message",
 			evaluator: newDMEvaluator,
+		},
+	],
+	[
+		"NEW_FOLLOWER",
+		{
+			type: "NEW_FOLLOWER",
+			name: "New Follower",
+			description: "Triggered when someone follows you",
+			evaluator: newFollowerEvaluator,
+			defaultConfig: { minFollowers: 1 },
 		},
 	],
 	[

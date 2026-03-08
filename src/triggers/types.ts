@@ -21,6 +21,7 @@ export interface TriggerContext {
 	retweets?: RetweetData[];
 	posts?: PostData[];
 	followers?: FollowerData[];
+	newFollowers?: Array<{ id: string; username: string; name?: string }>;
 	dms?: DMData[];
 	lastPostTime?: number;
 	currentTime?: number;
