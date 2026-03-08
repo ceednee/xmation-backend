@@ -1,4 +1,4 @@
-# My Decisions - X Automation System
+# My Decisions - Xmation Backend System
 
 > Replace ⬜ with: ✅ (Implement) / ⏸️ (Defer) / ❌ (Skip)
 

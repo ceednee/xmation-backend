@@ -38,7 +38,7 @@ describe("App Setup", () => {
 		expect(response.status).toBe(200);
 
 		const body = await response.json();
-		expect(body.message).toBe("X Automation API");
+		expect(body.message).toBe("Xmation Backend API");
 		expect(body.version).toBe("1.0.0");
 		expect(body.docs).toBe("/swagger");
 	});

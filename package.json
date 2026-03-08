@@ -1,7 +1,7 @@
 {
   "name": "xmation-backend",
   "version": "1.0.0",
-  "description": "X Automation System - Backend API",
+  "description": "Xmation Backend System - Backend API",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",

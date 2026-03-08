@@ -1,8 +1,8 @@
-# X Automation API Test Suite
+# Xmation Backend API Test Suite
 
 ## Overview
 
-This test suite provides comprehensive coverage for the X Automation API, using mocked dependencies to ensure tests run without external services.
+This test suite provides comprehensive coverage for the Xmation Backend API, using mocked dependencies to ensure tests run without external services.
 
 ## Test Statistics
 
