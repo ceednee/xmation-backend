@@ -23,9 +23,9 @@ const app = new Elysia()
 		swagger({
 			documentation: {
 				info: {
-					title: "X Automation API",
+					title: "Xmation Backend API",
 					version: "1.0.0",
-					description: "Backend API for X Automation System",
+					description: "Backend API for Xmation Backend System",
 				},
 			},
 		}),
@@ -37,14 +37,14 @@ const app = new Elysia()
 	.use(syncRoutes)
 	.use(workflowRoutes)
 	.get("/", () => ({
-		message: "X Automation API",
+		message: "Xmation Backend API",
 		version: "1.0.0",
 		docs: "/swagger",
 	}))
 	.listen(config.PORT);
 
 console.log(
-	`🚀 X Automation API running at ${app.server?.hostname}:${app.server?.port}`,
+	`🚀 Xmation Backend API running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
 export type App = typeof app;

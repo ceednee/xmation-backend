@@ -1,4 +1,4 @@
-# X Automation Assistant - Complete Triggers & Actions
+# Xmation Backend Assistant - Complete Triggers & Actions
 
 > 80 Customer-Friendly Triggers + 50 Customer-Friendly Actions
 

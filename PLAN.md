@@ -1,4 +1,4 @@
-# X Automation System - Streamlined Plan
+# Xmation Backend System - Streamlined Plan
 
 ## Overview
 A backend API-only automation system for X (Twitter) that allows users to create workflows with triggers and actions, featuring dry-run testing, versioning, and analytics.

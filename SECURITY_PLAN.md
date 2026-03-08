@@ -1,4 +1,4 @@
-# Security Plan - X Automation System
+# Security Plan - Xmation Backend System
 
 > Defense in depth: Multiple security layers to protect user data, X accounts, and system integrity.
 
