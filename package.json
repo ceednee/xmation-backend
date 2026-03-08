@@ -14,7 +14,7 @@
     "convex:deploy": "convex deploy"
   },
   "dependencies": {
-    "@convex-dev/auth": "^0.0.71",
+    "@convex-dev/auth": "^0.0.91",
     "@elysiajs/cors": "^1.0.0",
     "@elysiajs/swagger": "^1.0.0",
     "convex": "^1.12.0",
