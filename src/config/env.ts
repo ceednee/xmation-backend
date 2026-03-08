@@ -17,6 +17,11 @@ const envSchema = z.object({
 	RAPIDAPI_KEY: z.string().min(1, "RAPIDAPI_KEY is required"),
 	UPSTASH_REDIS_REST_URL: z.string().url().optional(),
 	UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+	
+	// Security settings
+	ALLOWED_ORIGINS: z.string().default("http://localhost:3000,http://localhost:5173"),
+	MAX_BODY_SIZE: z.string().default("1048576"), // 1MB default
+	REQUEST_TIMEOUT: z.string().default("30000"), // 30s default
 });
 
 // Parse and validate environment variables
@@ -39,4 +44,7 @@ export const config = {
 	USE_UPSTASH:
 		!!parsed.data.UPSTASH_REDIS_REST_URL &&
 		!!parsed.data.UPSTASH_REDIS_REST_TOKEN,
+	ALLOWED_ORIGINS: parsed.data.ALLOWED_ORIGINS.split(",").map(s => s.trim()),
+	MAX_BODY_SIZE: Number.parseInt(parsed.data.MAX_BODY_SIZE, 10),
+	REQUEST_TIMEOUT: Number.parseInt(parsed.data.REQUEST_TIMEOUT, 10),
 };
