@@ -39,20 +39,39 @@ export const requireAuth =
 			};
 		}
 
-		// TODO: Verify token with Convex Auth
-		// For now, we'll just check format
-		if (token.length < 10) {
+		// ⚠️ SECURITY: Token must be verified with Convex Auth
+		// The old implementation only checked length - this is INSECURE
+		// as any 10+ character string would bypass authentication
+		
+		// For now, we require the token to be present and properly formatted
+		// Real verification requires Convex Auth integration
+		// See: https://docs.convex.dev/auth
+		
+		if (!token || token.length === 0) {
 			set.status = 401;
 			return {
 				error: "Unauthorized",
 				code: "INVALID_TOKEN",
-				message: "Invalid token",
+				message: "Token is required",
 			};
 		}
-
-		// Token validated successfully
-		// Store token in a way that downstream handlers can access
-		// Note: In a real implementation, you'd verify with Convex Auth here
+		
+		// TODO: Implement actual Convex token verification
+		// - Parse JWT and verify signature
+		// - Check token expiry
+		// - Verify with Convex Auth provider
+		// - Store validated user in context
+		
+		// Token format validation (basic JWT structure check)
+		const jwtParts = token.split(".");
+		if (jwtParts.length !== 3) {
+			set.status = 401;
+			return {
+				error: "Unauthorized",
+				code: "INVALID_TOKEN_FORMAT",
+				message: "Token must be in JWT format (header.payload.signature)",
+			};
+		}
 	};
 
 /**
