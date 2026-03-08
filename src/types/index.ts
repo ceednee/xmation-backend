@@ -79,9 +79,10 @@ export interface ConditionConfig {
 	}>;
 }
 
-// Trigger types (user's selected 11)
+// Trigger types (user's selected 12)
 export type TriggerType =
 	| "NEW_MENTION"
+	| "NEW_FOLLOWER"
 	| "NEW_REPLY"
 	| "POST_REPOSTED"
 	| "HIGH_ENGAGEMENT"
