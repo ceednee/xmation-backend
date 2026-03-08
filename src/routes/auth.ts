@@ -4,6 +4,7 @@ import { type Context, Elysia, t } from "elysia";
 import Redis from "ioredis";
 import { config } from "../config/env";
 import { encrypt } from "../services/encryption";
+import { createHash, randomBytes } from "crypto";
 import { authRateLimit } from "../middleware/rate-limit-redis";
 import { logFailedAuth, logSuccessfulAuth, logTokenEvent } from "../utils/security-logger";
 import {
@@ -35,9 +36,13 @@ redis.connect().then(() => {
 
 // In-memory fallback for tests
 const codeVerifiers = new Map<string, { verifier: string; expiresAt: number }>();
+const oauthStates = new Map<string, { sessionId: string; expiresAt: number }>();
 
 // PKCE verifier TTL in seconds (10 minutes)
 const PKCE_TTL = 600;
+
+// OAuth state TTL in seconds (10 minutes)
+const STATE_TTL = 600;
 
 // Helper to store PKCE verifier
 const storePKCE = async (state: string, verifier: string): Promise<void> => {
@@ -79,7 +84,7 @@ const getPKCE = async (state: string): Promise<string | null> => {
 	return null;
 };
 
-// Clean up expired verifiers periodically (memory fallback only)
+// Clean up expired verifiers and states periodically (memory fallback only)
 setInterval(() => {
 	const now = Date.now();
 	for (const [state, data] of codeVerifiers.entries()) {
@@ -87,7 +92,76 @@ setInterval(() => {
 			codeVerifiers.delete(state);
 		}
 	}
+	for (const [state, data] of oauthStates.entries()) {
+		if (data.expiresAt < now) {
+			oauthStates.delete(state);
+		}
+	}
 }, 5 * 60 * 1000);
+
+// CSRF State helpers with session binding
+const generateSecureState = (sessionId: string): string => {
+	const randomPart = randomBytes(16).toString("hex");
+	const sessionHash = createHash("sha256")
+		.update(sessionId)
+		.digest("hex")
+		.slice(0, 16);
+	return `${randomPart}.${sessionHash}`;
+};
+
+const validateSecureState = (state: string, sessionId: string): boolean => {
+	const parts = state.split(".");
+	if (parts.length !== 2) return false;
+	const [, sessionHash] = parts;
+	const expectedHash = createHash("sha256")
+		.update(sessionId)
+		.digest("hex")
+		.slice(0, 16);
+	return sessionHash === expectedHash;
+};
+
+const storeOAuthState = async (state: string, sessionId: string): Promise<void> => {
+	if (redisAvailable) {
+		try {
+			await redis.setex(`oauth:state:${state}`, STATE_TTL, sessionId);
+			return;
+		} catch {
+			// Fall through to memory
+		}
+	}
+	oauthStates.set(state, {
+		sessionId,
+		expiresAt: Date.now() + STATE_TTL * 1000,
+	});
+};
+
+const verifyOAuthState = async (state: string, sessionId: string): Promise<boolean> => {
+	// First check session binding cryptographically
+	if (!validateSecureState(state, sessionId)) {
+		return false;
+	}
+
+	// Then check if state exists and hasn't been used
+	if (redisAvailable) {
+		try {
+			const storedSessionId = await redis.get(`oauth:state:${state}`);
+			if (storedSessionId === sessionId) {
+				await redis.del(`oauth:state:${state}`); // One-time use
+				return true;
+			}
+			return false;
+		} catch {
+			// Fall through to memory
+		}
+	}
+	// In-memory fallback
+	const stored = oauthStates.get(state);
+	if (stored && stored.sessionId === sessionId && stored.expiresAt > Date.now()) {
+		oauthStates.delete(state); // One-time use
+		return true;
+	}
+	return false;
+};
 
 /**
  * Auth routes for X OAuth
@@ -137,12 +211,18 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
 	// GET /auth/x/authorize - Initiate X OAuth with PKCE
 	.get("/x/authorize", async ({ request, set }: Context) => {
+		// Get session ID from request (header or cookie)
+		const sessionId = request.headers.get("x-session-id") || crypto.randomUUID();
+		
 		const codeVerifier = generateCodeVerifier();
 		const codeChallenge = await generateCodeChallenge(codeVerifier);
-		const state = crypto.randomUUID();
+		
+		// Generate CSRF-protected state bound to session
+		const state = generateSecureState(sessionId);
 
-		// Store verifier
+		// Store verifier and state
 		await storePKCE(state, codeVerifier);
+		await storeOAuthState(state, sessionId);
 
 		const redirectUri = `${config.CONVEX_URL}/auth/x/callback`;
 
@@ -166,21 +246,44 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 		"/x/callback",
 		async ({
 			body,
+			request,
 			set,
-		}: Context & { body: { code: string; state: string } }) => {
+		}: Context & { body: { code: string; state: string }; request: Request }) => {
 			try {
 				const { code, state } = body;
-
-				// Verify state and get code verifier
-				const stored = codeVerifiers.get(state);
-				if (!stored) {
+				
+				// Get session ID from request
+				const sessionId = request.headers.get("x-session-id");
+				if (!sessionId) {
 					set.status = 400;
 					return {
 						success: false,
-						error: "Invalid or expired state",
+						error: "Session ID required for CSRF protection",
+						code: "MISSING_SESSION",
 					};
 				}
-				codeVerifiers.delete(state);
+
+				// Verify CSRF state (cryptographically bound to session)
+				const isValidState = await verifyOAuthState(state, sessionId);
+				if (!isValidState) {
+					set.status = 403;
+					return {
+						success: false,
+						error: "Invalid or expired state - possible CSRF attack",
+						code: "CSRF_VALIDATION_FAILED",
+					};
+				}
+
+				// Get code verifier
+				const codeVerifier = await getPKCE(state);
+				if (!codeVerifier) {
+					set.status = 400;
+					return {
+						success: false,
+						error: "Code verifier expired or invalid",
+						code: "INVALID_VERIFIER",
+					};
+				}
 
 				const redirectUri = `${config.CONVEX_URL}/auth/x/callback`;
 
@@ -230,10 +333,11 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			} catch (error) {
 				console.error("OAuth callback error:", error);
 				set.status = 500;
+				// Sanitized error - don't expose internal details
 				return {
 					success: false,
 					error: "Failed to connect X account",
-					details: error instanceof Error ? error.message : "Unknown error",
+					code: "OAUTH_ERROR",
 				};
 			}
 		},
