@@ -1,4 +1,5 @@
 import { type Context, Elysia } from "elysia";
+import { verifyConvexToken } from "../utils/token-verifier";
 
 // Simple in-memory rate limiting (replace with Redis in production)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -13,6 +14,7 @@ export interface AuthContext {
 
 /**
  * Middleware: Require authentication (valid Bearer token)
+ * Verifies JWT token with Convex Auth
  */
 export const requireAuth =
 	() =>
@@ -39,39 +41,23 @@ export const requireAuth =
 			};
 		}
 
-		// ⚠️ SECURITY: Token must be verified with Convex Auth
-		// The old implementation only checked length - this is INSECURE
-		// as any 10+ character string would bypass authentication
+		// ✅ SECURITY: Verify token with Convex JWT validation
+		const payload = await verifyConvexToken(token);
 		
-		// For now, we require the token to be present and properly formatted
-		// Real verification requires Convex Auth integration
-		// See: https://docs.convex.dev/auth
-		
-		if (!token || token.length === 0) {
+		if (!payload) {
 			set.status = 401;
 			return {
 				error: "Unauthorized",
 				code: "INVALID_TOKEN",
-				message: "Token is required",
+				message: "Token is invalid or expired",
 			};
 		}
 		
-		// TODO: Implement actual Convex token verification
-		// - Parse JWT and verify signature
-		// - Check token expiry
-		// - Verify with Convex Auth provider
-		// - Store validated user in context
+		// Store user context for downstream handlers
+		// Note: This would normally be attached to the context
+		// For now, we verify the token is valid
 		
-		// Token format validation (basic JWT structure check)
-		const jwtParts = token.split(".");
-		if (jwtParts.length !== 3) {
-			set.status = 401;
-			return {
-				error: "Unauthorized",
-				code: "INVALID_TOKEN_FORMAT",
-				message: "Token must be in JWT format (header.payload.signature)",
-			};
-		}
+		return;
 	};
 
 /**
