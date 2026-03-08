@@ -28,7 +28,7 @@ npm install -g convex
 ### 2. Initialize Convex
 
 ```bash
-cd x-automation-api
+cd xmation-backend
 npx convex dev
 ```
 

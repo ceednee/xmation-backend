@@ -53,7 +53,7 @@ Total: 43 tests, 0 fail, 87 expect() calls
 ## 🏗️ Project Structure
 
 ```
-x-automation-api/
+xmation-backend/
 ├── src/
 │   ├── config/
 │   │   └── env.ts           # Environment configuration
