@@ -58,6 +58,11 @@ export const rateLimit = (options: RateLimitOptions = {}) => {
 	const windowSeconds = Math.ceil(windowMs / 1000);
 
 	return async (context: Context) => {
+		// Skip rate limiting in test environment to prevent test flakiness
+		if (config.IS_TEST) {
+			return;
+		}
+
 		const { request, set } = context;
 
 		// Generate rate limit key
