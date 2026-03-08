@@ -190,7 +190,8 @@ export class CronJobManager {
 			await job.handler();
 			job.metrics.lastSuccessTime = Date.now();
 		} catch (error) {
-			console.error(`Job ${name} failed:`, error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.error(`Job ${name} failed:`, errorMessage);
 			job.metrics.lastErrorTime = Date.now();
 			job.metrics.totalErrors++;
 		} finally {
