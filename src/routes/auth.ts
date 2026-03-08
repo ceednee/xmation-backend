@@ -1,8 +1,11 @@
 // @ts-nocheck
 import { ConvexHttpClient } from "convex/browser";
 import { type Context, Elysia, t } from "elysia";
+import Redis from "ioredis";
 import { config } from "../config/env";
 import { encrypt } from "../services/encryption";
+import { authRateLimit } from "../middleware/rate-limit-redis";
+import { logFailedAuth, logSuccessfulAuth, logTokenEvent } from "../utils/security-logger";
 import {
 	exchangeCodeForTokens,
 	generateAuthUrl,
@@ -14,25 +17,10 @@ import {
 } from "../services/x-oauth";
 
 const convex = new ConvexHttpClient(config.CONVEX_URL);
+const redis = new Redis(config.REDIS_URL);
 
-// Store for PKCE verifiers (in production, use Redis or database)
-const codeVerifiers = new Map<
-	string,
-	{ verifier: string; expiresAt: number }
->();
-
-// Clean up expired verifiers every 5 minutes
-setInterval(
-	() => {
-		const now = Date.now();
-		for (const [state, data] of codeVerifiers.entries()) {
-			if (data.expiresAt < now) {
-				codeVerifiers.delete(state);
-			}
-		}
-	},
-	5 * 60 * 1000,
-);
+// PKCE verifier TTL in seconds (10 minutes)
+const PKCE_TTL = 600;
 
 /**
  * Auth routes for X OAuth
@@ -81,16 +69,17 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 	})
 
 	// GET /auth/x/authorize - Initiate X OAuth with PKCE
-	.get("/x/authorize", async ({ set }: Context) => {
+	.get("/x/authorize", async ({ request, set }: Context) => {
 		const codeVerifier = generateCodeVerifier();
 		const codeChallenge = await generateCodeChallenge(codeVerifier);
 		const state = crypto.randomUUID();
 
-		// Store verifier for callback (10 minute expiry)
-		codeVerifiers.set(state, {
-			verifier: codeVerifier,
-			expiresAt: Date.now() + 10 * 60 * 1000,
-		});
+		// Store verifier in Redis with 10 minute expiry
+		await redis.setex(
+			`pkce:${state}`,
+			PKCE_TTL,
+			codeVerifier
+		);
 
 		const redirectUri = `${config.CONVEX_URL}/auth/x/callback`;
 
@@ -163,6 +152,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 						verified: profile.verified || false,
 					},
 				});
+
+				logSuccessfulAuth(request, profile.id);
 
 				return {
 					success: true,
@@ -263,6 +254,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			await convex.mutation(api.users.disconnectX, {
 				token: authHeader.replace("Bearer ", ""),
 			});
+
+			logTokenEvent("token_revoke", user?.userId || "unknown");
 
 			return {
 				success: true,

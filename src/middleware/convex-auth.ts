@@ -2,6 +2,8 @@ import { ConvexHttpClient } from "convex/browser";
 import type { Context } from "elysia";
 import { config } from "../config/env";
 import { decrypt } from "../services/encryption";
+import { logFailedAuth } from "../utils/security-logger";
+import { apiRateLimit } from "./rate-limit-redis";
 
 // Convex HTTP client for server-side queries
 const convex = new ConvexHttpClient(config.CONVEX_URL);
@@ -113,6 +115,7 @@ export const requireConvexAuth =
 		const user = await verifyConvexSession(token);
 
 		if (!user) {
+			logFailedAuth(request, "invalid_session");
 			set.status = 401;
 			return {
 				error: "Unauthorized",
@@ -162,12 +165,18 @@ export const requireXConnection =
 
 /**
  * Combined middleware for protected routes
+ * Includes rate limiting, auth, and X connection check
  */
 export const protectedRoute = () => {
+	const rateLimiter = apiRateLimit;
 	const auth = requireConvexAuth();
 	const xCheck = requireXConnection();
 
 	return async (context: Context) => {
+		// Check rate limit first
+		const rateResult = await rateLimiter(context);
+		if (rateResult) return rateResult;
+
 		// Check auth
 		const authResult = await auth(context);
 		if (authResult) return authResult;
