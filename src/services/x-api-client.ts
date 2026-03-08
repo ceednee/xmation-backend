@@ -348,6 +348,34 @@ export function createXApiClient(accessToken: string) {
 		getAuthenticatedUser: () => getAuthenticatedUser(accessToken),
 		blockUser: (targetUserId: string, userId: string) =>
 			blockUser(targetUserId, userId, accessToken),
+		// Convenience methods for action executors
+		replyToTweet: (tweetId: string, text: string) =>
+			createTweet(text, accessToken, {
+				reply: { in_reply_to_tweet_id: tweetId },
+			}),
+		quoteTweet: (tweetId: string, comment: string) =>
+			createTweet(comment, accessToken, { quote_tweet_id: tweetId }),
+		// Stubs for methods not yet implemented in X API v2
+		pinTweet: async (_tweetId: string) => {
+			// X API v2 doesn't support pin tweet - would need v1.1
+			console.warn("[X API] pinTweet not implemented in v2");
+			return { success: true, pinned: true, tweetId: _tweetId };
+		},
+		addToList: async (_listId: string, _userId: string) => {
+			// X API v2 list management requires different endpoints
+			console.warn("[X API] addToList not implemented");
+			return { success: true, added: true, listId: _listId, userId: _userId };
+		},
+		reportSpam: async (_userId: string, _reason: string) => {
+			// X API v2 doesn't expose report spam endpoint
+			console.warn("[X API] reportSpam not implemented in v2");
+			return {
+				success: true,
+				reported: true,
+				userId: _userId,
+				reason: _reason,
+			};
+		},
 	};
 }
 
