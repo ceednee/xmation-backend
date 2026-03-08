@@ -2,7 +2,7 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { config } from "./config/env";
-import { getClientIP } from "./middleware/security";
+import { requestValidation, securityHeaders } from "./middleware/security";
 import actionRoutes from "./routes/actions";
 import authRoutes from "./routes/auth";
 import syncRoutes from "./routes/sync";
@@ -19,52 +19,10 @@ const healthRoutes = new Elysia({ prefix: "/health" }).get("/", () => ({
 
 // Main app
 const app = new Elysia()
-	// Request validation middleware
-	.onRequest(({ request, set }) => {
-		// Check content length
-		const contentLength = request.headers.get("content-length");
-		if (contentLength) {
-			const size = Number.parseInt(contentLength, 10);
-			if (size > config.MAX_BODY_SIZE) {
-				set.status = 413; // Payload Too Large
-				return {
-					error: "Payload too large",
-					code: "PAYLOAD_TOO_LARGE",
-					maxSize: config.MAX_BODY_SIZE,
-				};
-			}
-		}
-	})
-	
-	// Security headers middleware
-	.onAfterHandle(({ set }) => {
-		// Prevent clickjacking
-		set.headers["X-Frame-Options"] = "DENY";
+	// Security middleware (applied first)
+	.use(requestValidation)
+	.use(securityHeaders)
 
-		// Prevent MIME type sniffing
-		set.headers["X-Content-Type-Options"] = "nosniff";
-
-		// XSS Protection (legacy browsers)
-		set.headers["X-XSS-Protection"] = "1; mode=block";
-
-		// Referrer policy
-		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-
-		// Permissions policy (restrict features)
-		set.headers["Permissions-Policy"] =
-			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()";
-
-		// HSTS (HTTPS only in production)
-		if (config.IS_PROD) {
-			set.headers["Strict-Transport-Security"] =
-				"max-age=31536000; includeSubDomains; preload";
-		}
-
-		// Remove server fingerprinting
-		delete set.headers["Server"];
-		delete set.headers["X-Powered-By"];
-	})
-	
 	// CORS with strict origin validation
 	.use(
 		cors({
@@ -77,7 +35,7 @@ const app = new Elysia()
 				"X-Request-ID",
 				"X-API-Version",
 			],
-			exposedHeaders: [
+			exposeHeaders: [
 				"X-RateLimit-Limit",
 				"X-RateLimit-Remaining",
 				"X-RateLimit-Reset",
@@ -85,7 +43,7 @@ const app = new Elysia()
 			maxAge: 86400,
 		}),
 	)
-	
+
 	// API Documentation
 	.use(
 		swagger({
@@ -112,7 +70,7 @@ const app = new Elysia()
 			},
 		}),
 	)
-	
+
 	// Routes
 	.use(healthRoutes)
 	.use(authRoutes)
@@ -120,7 +78,7 @@ const app = new Elysia()
 	.use(actionRoutes)
 	.use(syncRoutes)
 	.use(workflowRoutes)
-	
+
 	// Root endpoint
 	.get("/", () => ({
 		message: "Xmation Backend API",
@@ -128,7 +86,7 @@ const app = new Elysia()
 		docs: "/swagger",
 		health: "/health",
 	}))
-	
+
 	// 404 handler
 	.onError(({ code, set }) => {
 		if (code === "NOT_FOUND") {
@@ -140,7 +98,7 @@ const app = new Elysia()
 			};
 		}
 	})
-	
+
 	.listen(config.PORT);
 
 console.log(

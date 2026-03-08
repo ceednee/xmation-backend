@@ -11,6 +11,17 @@ const memoryCache = new Map<string, { value: string; expiry: number }>();
 let redisClient: Redis | null = null;
 
 /**
+ * Extract hostname from URL
+ */
+function getHostname(url: string): string {
+	try {
+		return new URL(url).hostname;
+	} catch {
+		return url;
+	}
+}
+
+/**
  * Get Redis client (initialize if needed)
  */
 function getRedisClient(): Redis | null {
@@ -21,8 +32,11 @@ function getRedisClient(): Redis | null {
 	}
 
 	try {
+		// Extract hostname from Upstash URL (remove https://)
+		const hostname = getHostname(config.UPSTASH_REDIS_REST_URL!);
+		
 		redisClient = new Redis({
-			host: config.UPSTASH_REDIS_REST_URL,
+			host: hostname,
 			port: 6379,
 			password: config.UPSTASH_REDIS_REST_TOKEN,
 			tls: {},
@@ -33,6 +47,8 @@ function getRedisClient(): Redis | null {
 				}
 				return Math.min(times * 100, 3000);
 			},
+			connectTimeout: 5000,
+			maxRetriesPerRequest: 1,
 		});
 
 		redisClient.on("error", (err) => {

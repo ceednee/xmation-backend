@@ -17,10 +17,77 @@ import {
 } from "../services/x-oauth";
 
 const convex = new ConvexHttpClient(config.CONVEX_URL);
-const redis = new Redis(config.REDIS_URL);
+
+// PKCE storage with Redis + in-memory fallback
+const redis = new Redis(config.REDIS_URL, {
+	connectTimeout: 5000,
+	maxRetriesPerRequest: 1,
+	lazyConnect: true,
+});
+
+// Track Redis availability
+let redisAvailable = false;
+redis.connect().then(() => {
+	redisAvailable = true;
+}).catch(() => {
+	redisAvailable = false;
+});
+
+// In-memory fallback for tests
+const codeVerifiers = new Map<string, { verifier: string; expiresAt: number }>();
 
 // PKCE verifier TTL in seconds (10 minutes)
 const PKCE_TTL = 600;
+
+// Helper to store PKCE verifier
+const storePKCE = async (state: string, verifier: string): Promise<void> => {
+	if (redisAvailable) {
+		try {
+			await redis.setex(`pkce:${state}`, PKCE_TTL, verifier);
+			return;
+		} catch {
+			// Fall through to memory
+		}
+	}
+	// In-memory fallback
+	codeVerifiers.set(state, {
+		verifier,
+		expiresAt: Date.now() + PKCE_TTL * 1000,
+	});
+};
+
+// Helper to get PKCE verifier
+const getPKCE = async (state: string): Promise<string | null> => {
+	if (redisAvailable) {
+		try {
+			const verifier = await redis.get(`pkce:${state}`);
+			if (verifier) {
+				await redis.del(`pkce:${state}`);
+				return verifier;
+			}
+		} catch {
+			// Fall through to memory
+		}
+	}
+	// In-memory fallback
+	const stored = codeVerifiers.get(state);
+	if (stored && stored.expiresAt > Date.now()) {
+		codeVerifiers.delete(state);
+		return stored.verifier;
+	}
+	codeVerifiers.delete(state);
+	return null;
+};
+
+// Clean up expired verifiers periodically (memory fallback only)
+setInterval(() => {
+	const now = Date.now();
+	for (const [state, data] of codeVerifiers.entries()) {
+		if (data.expiresAt < now) {
+			codeVerifiers.delete(state);
+		}
+	}
+}, 5 * 60 * 1000);
 
 /**
  * Auth routes for X OAuth
@@ -74,12 +141,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 		const codeChallenge = await generateCodeChallenge(codeVerifier);
 		const state = crypto.randomUUID();
 
-		// Store verifier in Redis with 10 minute expiry
-		await redis.setex(
-			`pkce:${state}`,
-			PKCE_TTL,
-			codeVerifier
-		);
+		// Store verifier
+		await storePKCE(state, codeVerifier);
 
 		const redirectUri = `${config.CONVEX_URL}/auth/x/callback`;
 
@@ -125,7 +188,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 				const tokens = await exchangeCodeForTokens({
 					code,
 					redirectUri,
-					codeVerifier: stored.verifier,
+					codeVerifier,
 				});
 
 				// Get user profile from X

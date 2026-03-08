@@ -15,6 +15,18 @@ export interface SecurityEvent {
 }
 
 /**
+ * Safely extract pathname from request URL
+ */
+const getPathFromRequest = (request: Request): string | undefined => {
+	try {
+		if (!request.url) return undefined;
+		return new URL(request.url).pathname;
+	} catch {
+		return undefined;
+	}
+};
+
+/**
  * Log security event
  * Outputs structured JSON for log aggregation (Fluentd, Vector, etc.)
  */
@@ -48,7 +60,7 @@ export const logFailedAuth = (
 		userId,
 		ip: getClientIP(request),
 		userAgent: request.headers.get("user-agent") || undefined,
-		path: new URL(request.url).pathname,
+		path: getPathFromRequest(request),
 		method: request.method,
 		metadata: { reason },
 	});
@@ -64,7 +76,7 @@ export const logSuccessfulAuth = (request: Request, userId: string): void => {
 		userId,
 		ip: getClientIP(request),
 		userAgent: request.headers.get("user-agent") || undefined,
-		path: new URL(request.url).pathname,
+		path: getPathFromRequest(request),
 		method: request.method,
 	});
 };
@@ -78,7 +90,7 @@ export const logRateLimit = (request: Request, limitType: string): void => {
 		event: "rate_limit_exceeded",
 		ip: getClientIP(request),
 		userAgent: request.headers.get("user-agent") || undefined,
-		path: new URL(request.url).pathname,
+		path: getPathFromRequest(request),
 		method: request.method,
 		metadata: { limitType },
 	});
@@ -97,7 +109,7 @@ export const logSuspiciousActivity = (
 		event: "suspicious_activity",
 		ip: getClientIP(request),
 		userAgent: request.headers.get("user-agent") || undefined,
-		path: new URL(request.url).pathname,
+		path: getPathFromRequest(request),
 		method: request.method,
 		metadata: { reason, ...metadata },
 	});
