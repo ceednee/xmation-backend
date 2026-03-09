@@ -5,6 +5,8 @@
  * Used for testing and dry-run mode without making actual API calls.
  */
 
+import type { XApiResponse } from "../types";
+
 /**
  * Creates a mock X tweet API client
  * 
@@ -25,11 +27,11 @@
  * 
  * // Mock creating a tweet
  * const tweet = await client.createTweet("Hello world!");
- * // Returns: { data: { id: "mock_tweet_1234567890", text: "Hello world!" } }
+ * // Returns: { success: true, data: { id: "mock_tweet_1234567890", text: "Hello world!" } }
  * 
  * // Mock replying to a tweet
  * const reply = await client.replyToTweet("123", "Great tweet!");
- * // Returns: { data: { id: "mock_reply_1234567890", text: "Great tweet!", replyTo: "123" } }
+ * // Returns: { success: true, data: { id: "mock_reply_1234567890", text: "Great tweet!", replyTo: "123" } }
  * ```
  */
 export const createMockTweetClient = () => ({
@@ -38,7 +40,8 @@ export const createMockTweetClient = () => ({
 	 * @param text - Tweet text
 	 * @returns Mock tweet response
 	 */
-	createTweet: async (text: string) => ({
+	createTweet: async (text: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { id: `mock_tweet_${Date.now()}`, text },
 	}),
 
@@ -47,7 +50,8 @@ export const createMockTweetClient = () => ({
 	 * @param tweetId - Tweet ID to like
 	 * @returns Mock like response
 	 */
-	likeTweet: async (tweetId: string) => ({
+	likeTweet: async (tweetId: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { liked: true, tweetId },
 	}),
 
@@ -56,7 +60,8 @@ export const createMockTweetClient = () => ({
 	 * @param tweetId - Tweet ID to retweet
 	 * @returns Mock retweet response
 	 */
-	retweet: async (tweetId: string) => ({
+	retweet: async (tweetId: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { retweeted: true, tweetId },
 	}),
 
@@ -66,7 +71,8 @@ export const createMockTweetClient = () => ({
 	 * @param text - Reply text
 	 * @returns Mock reply response
 	 */
-	replyToTweet: async (tweetId: string, text: string) => ({
+	replyToTweet: async (tweetId: string, text: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { id: `mock_reply_${Date.now()}`, text, replyTo: tweetId },
 	}),
 
@@ -76,7 +82,8 @@ export const createMockTweetClient = () => ({
 	 * @param comment - Quote comment
 	 * @returns Mock quote response
 	 */
-	quoteTweet: async (tweetId: string, comment: string) => ({
+	quoteTweet: async (tweetId: string, comment: string): Promise<XApiResponse> => ({
+		success: true,
 		data: {
 			id: `mock_quote_${Date.now()}`,
 			text: comment,
@@ -89,16 +96,17 @@ export const createMockTweetClient = () => ({
 	 * @param tweetId - Tweet ID to pin
 	 * @returns Mock pin response
 	 */
-	pinTweet: async (tweetId: string) => ({
-		pinned: true,
-		tweetId,
+	pinTweet: async (tweetId: string): Promise<XApiResponse> => ({
+		success: true,
+		data: { pinned: true, tweetId },
 	}),
 
 	/**
 	 * Mock get user tweets
 	 * @returns Empty tweets list
 	 */
-	getUserTweets: async () => ({
+	getUserTweets: async (): Promise<XApiResponse> => ({
+		success: true,
 		data: [],
 		meta: {},
 	}),

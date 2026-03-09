@@ -5,6 +5,8 @@
  * Used for testing and dry-run mode without making actual API calls.
  */
 
+import type { XApiResponse } from "../types";
+
 /**
  * Creates a mock X message API client
  * 
@@ -21,11 +23,11 @@
  * 
  * // Mock sending a DM
  * const dm = await client.sendDM("12345", "Hello!");
- * // Returns: { data: { id: "mock_dm_1234567890", text: "Hello!", recipientId: "12345" } }
+ * // Returns: { success: true, data: { id: "mock_dm_1234567890", text: "Hello!", recipientId: "12345" } }
  * 
  * // Mock getting mentions
  * const mentions = await client.getMentions("myUserId");
- * // Returns: { data: [], meta: {} }
+ * // Returns: { success: true, data: [], meta: {} }
  * ```
  */
 export const createMockMessageClient = () => ({
@@ -35,7 +37,8 @@ export const createMockMessageClient = () => ({
 	 * @param text - Message text
 	 * @returns Mock DM response
 	 */
-	sendDM: async (userId: string, text: string) => ({
+	sendDM: async (userId: string, text: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { id: `mock_dm_${Date.now()}`, text, recipientId: userId },
 	}),
 
@@ -43,7 +46,8 @@ export const createMockMessageClient = () => ({
 	 * Mock get mentions
 	 * @returns Empty mentions list
 	 */
-	getMentions: async () => ({
+	getMentions: async (): Promise<XApiResponse> => ({
+		success: true,
 		data: [],
 		meta: {},
 	}),
@@ -52,7 +56,8 @@ export const createMockMessageClient = () => ({
 	 * Mock get user tweets
 	 * @returns Empty tweets list
 	 */
-	getUserTweets: async () => ({
+	getUserTweets: async (): Promise<XApiResponse> => ({
+		success: true,
 		data: [],
 		meta: {},
 	}),

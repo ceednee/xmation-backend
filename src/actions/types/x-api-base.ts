@@ -7,15 +7,28 @@
  */
 
 /**
- * Generic X API response type
+ * X API response structure
  * 
- * X API responses vary widely between endpoints, so this type
- * is intentionally permissive. Specific endpoints should cast
- * or narrow this type as needed.
- * 
- * // biome-ignore lint/suspicious/noExplicitAny: X API responses vary widely
+ * Standardized response format for all X API calls.
  */
-export type XApiResponse = unknown;
+export interface XApiResponse<T = unknown> {
+	/** Whether the API call was successful */
+	success: boolean;
+	/** Response data from X API */
+	data?: T;
+	/** Error message if the call failed */
+	error?: string;
+	/** Error code for programmatic handling */
+	errorCode?: string;
+	/** Metadata from X API (pagination, etc.) */
+	meta?: Record<string, unknown>;
+	/** Rate limit information */
+	rateLimit?: {
+		limit: number;
+		remaining: number;
+		resetTime: number;
+	};
+}
 
 /**
  * Options for creating a new tweet

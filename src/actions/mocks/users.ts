@@ -5,6 +5,8 @@
  * Used for testing and dry-run mode without making actual API calls.
  */
 
+import type { XApiResponse } from "../types";
+
 /**
  * Creates a mock X user API client
  * 
@@ -24,11 +26,11 @@
  * 
  * // Mock following a user
  * const result = await client.followUser("12345");
- * // Returns: { data: { following: true, userId: "12345" } }
+ * // Returns: { success: true, data: { following: true, userId: "12345" } }
  * 
  * // Mock getting followers
  * const followers = await client.getFollowers("myUserId");
- * // Returns: { data: [{ id: "mock_follower", username: "mockuser" }], meta: {} }
+ * // Returns: { success: true, data: [{ id: "mock_follower", username: "mockuser" }], meta: {} }
  * ```
  */
 export const createMockUserClient = () => ({
@@ -37,7 +39,8 @@ export const createMockUserClient = () => ({
 	 * @param targetUserId - User ID to follow
 	 * @returns Mock follow response
 	 */
-	followUser: async (targetUserId: string) => ({
+	followUser: async (targetUserId: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { following: true, userId: targetUserId },
 	}),
 
@@ -45,7 +48,8 @@ export const createMockUserClient = () => ({
 	 * Mock get followers
 	 * @returns Mock followers list
 	 */
-	getFollowers: async () => ({
+	getFollowers: async (): Promise<XApiResponse> => ({
+		success: true,
 		data: [{ id: "mock_follower", username: "mockuser" }],
 		meta: {},
 	}),
@@ -54,7 +58,8 @@ export const createMockUserClient = () => ({
 	 * Mock get authenticated user
 	 * @returns Mock user info
 	 */
-	getAuthenticatedUser: async () => ({
+	getAuthenticatedUser: async (): Promise<XApiResponse> => ({
+		success: true,
 		data: { id: "mock_user", username: "mockuser" },
 	}),
 
@@ -63,7 +68,8 @@ export const createMockUserClient = () => ({
 	 * @param targetUserId - User ID to block
 	 * @returns Mock block response
 	 */
-	blockUser: async (targetUserId: string) => ({
+	blockUser: async (targetUserId: string): Promise<XApiResponse> => ({
+		success: true,
 		data: { blocked: true, userId: targetUserId },
 	}),
 
@@ -73,10 +79,9 @@ export const createMockUserClient = () => ({
 	 * @param userId - User ID to add
 	 * @returns Mock add to list response
 	 */
-	addToList: async (listId: string, userId: string) => ({
-		added: true,
-		listId,
-		userId,
+	addToList: async (listId: string, userId: string): Promise<XApiResponse> => ({
+		success: true,
+		data: { added: true, listId, userId },
 	}),
 
 	/**
@@ -85,9 +90,8 @@ export const createMockUserClient = () => ({
 	 * @param reason - Report reason
 	 * @returns Mock report response
 	 */
-	reportSpam: async (userId: string, reason: string) => ({
-		reported: true,
-		userId,
-		reason,
+	reportSpam: async (userId: string, reason: string): Promise<XApiResponse> => ({
+		success: true,
+		data: { reported: true, userId, reason },
 	}),
 });
