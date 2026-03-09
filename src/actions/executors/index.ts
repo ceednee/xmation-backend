@@ -31,6 +31,8 @@ import { followBackExecutor } from "./x/follow-back";
 import { addToListExecutor } from "./x/list";
 import { blockUserExecutor } from "./x/block";
 import { reportSpamExecutor } from "./x/report";
+import { createPostExecutor } from "./x/create-post";
+import { likeTweetExecutor } from "./x/like";
 import { waitDelayExecutor } from "./internal/wait";
 import { conditionCheckExecutor } from "./internal/condition";
 import { logEventExecutor } from "./internal/log";
@@ -49,6 +51,8 @@ export { followBackExecutor } from "./x/follow-back";
 export { addToListExecutor } from "./x/list";
 export { blockUserExecutor } from "./x/block";
 export { reportSpamExecutor } from "./x/report";
+export { createPostExecutor } from "./x/create-post";
+export { likeTweetExecutor } from "./x/like";
 export { waitDelayExecutor } from "./internal/wait";
 export { conditionCheckExecutor } from "./internal/condition";
 export { logEventExecutor } from "./internal/log";
@@ -74,7 +78,9 @@ const createDef = (
  * Maps action type strings to their definitions.
  */
 export const actionRegistry: Map<string, ActionDefinition> = new Map([
+	createDef("CREATE_POST", "Create Post", "Create a new tweet", createPostExecutor, ["text"]),
 	createDef("REPLY_TO_TWEET", "Reply to Tweet", "Reply to a tweet", replyToTweetExecutor, ["text"]),
+	createDef("LIKE_TWEET", "Like Tweet", "Like a tweet", likeTweetExecutor, ["tweetId"]),
 	createDef("RETWEET", "Retweet", "Retweet a tweet", retweetExecutor),
 	createDef("QUOTE_TWEET", "Quote Tweet", "Quote tweet with comment", quoteTweetExecutor, ["comment"]),
 	createDef("SEND_DM", "Send DM", "Send direct message", sendDMExecutor, ["text"]),
