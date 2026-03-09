@@ -1,6 +1,7 @@
-import type { Workflow } from "../../types";
-import type { TriggerContext, TriggerEvaluator } from "../../triggers/types";
+import type { Workflow, TriggerConfig } from "../../types";
+import type { TriggerContext, TriggerEvaluator, TriggerResult } from "../../triggers/types";
 import type { EvaluationResult } from "./types";
+import { getTriggerDefinition } from "../../triggers/evaluators";
 
 export const evaluateSingleTrigger = async (
 	triggerType: string,
@@ -34,6 +35,44 @@ export const evaluateSingleTrigger = async (
 
 	return { shouldTrigger: false };
 };
+
+/**
+ * Evaluate a single trigger.
+ * Looks up the trigger definition and runs its evaluator.
+ */
+export async function evaluateTrigger(
+	trigger: TriggerConfig,
+	context: TriggerContext,
+): Promise<TriggerResult> {
+	const definition = getTriggerDefinition(trigger.type);
+
+	if (!definition) {
+		return {
+			triggered: false,
+			triggerType: trigger.type,
+			timestamp: Date.now(),
+		};
+	}
+
+	// Merge default config with trigger config
+	const config = {
+		...definition.defaultConfig,
+		...trigger.config,
+	};
+
+	try {
+		const result = await definition.evaluator(config, context);
+		return result;
+	} catch (error) {
+		console.error(`Trigger evaluation failed for ${trigger.type}:`, error);
+		return {
+			triggered: false,
+			triggerType: trigger.type,
+			timestamp: Date.now(),
+			error: error instanceof Error ? error.message : String(error),
+		};
+	}
+}
 
 export const evaluateWorkflowTriggers = async (
 	workflow: Workflow,

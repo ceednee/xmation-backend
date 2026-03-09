@@ -16,10 +16,13 @@ export interface WorkflowExecutionResult {
 }
 
 export interface ExecutionContext {
+	workflowId: string;
 	userId: string;
+	runId: string;
 	xAccessToken?: string;
 	triggerData: Record<string, unknown>;
 	dryRun?: boolean;
+	previousResults?: Array<{ success: boolean; actionType: string; error?: string }>;
 }
 
 export interface ExecutionState {

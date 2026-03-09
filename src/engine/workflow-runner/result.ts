@@ -1,3 +1,4 @@
+import type { Workflow, ActionConfig } from "../../types";
 import type { WorkflowExecutionResult, ExecutionState } from "./types";
 
 export const createErrorResult = (
@@ -26,6 +27,18 @@ export const createPausedResult = (workflowId: string, userId: string, isDryRun:
 export const createDraftResult = (workflowId: string, userId: string, isDryRun: boolean, startedAt: number) =>
 	createErrorResult(workflowId, userId, isDryRun, "Workflow is in draft mode", startedAt);
 
+/**
+ * @deprecated Use createPausedResult instead
+ */
+export const buildPausedResult = (workflow: Workflow, startedAt: number) =>
+	createPausedResult(workflow._id, workflow.userId, workflow.isDryRun, startedAt);
+
+/**
+ * @deprecated Use createDraftResult instead
+ */
+export const buildDraftResult = (workflow: Workflow, startedAt: number) =>
+	createDraftResult(workflow._id, workflow.userId, workflow.isDryRun, startedAt);
+
 export const determineStatus = (actionsFailed: number, actionsExecuted: number): "completed" | "failed" | "partial" => {
 	if (actionsFailed === 0) return "completed";
 	if (actionsExecuted === 0) return "failed";
@@ -53,3 +66,36 @@ export const createSuccessResult = (
 	completedAt: Date.now(),
 	context: triggerData,
 });
+
+/**
+ * Builder class for constructing workflow execution results.
+ */
+export class ResultBuilder {
+	build(
+		workflow: Workflow,
+		execution: ExecutionState,
+		startedAt: number,
+		triggerData: Record<string, unknown>,
+	): WorkflowExecutionResult {
+		const mode = workflow.isDryRun ? "dry_run" : "live";
+		
+		if (execution.hasErrors && execution.actionsExecuted === 0) {
+			return createErrorResult(
+				workflow._id,
+				workflow.userId,
+				workflow.isDryRun,
+				execution.firstError || "Execution failed",
+				startedAt,
+			);
+		}
+		
+		return createSuccessResult(
+			workflow._id,
+			workflow.userId,
+			mode,
+			execution,
+			startedAt,
+			triggerData,
+		);
+	}
+}

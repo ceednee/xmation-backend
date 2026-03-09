@@ -18,7 +18,7 @@ export const welcomeDMExecutor: ActionExecutor = async (config, context) => {
 			return createResult(false, "WELCOME_DM", Date.now() - start, undefined, "No follower ID provided");
 		}
 
-		const result = await xClient.sendDM(userId, message);
+		const result = await xClient.sendDM(userId, message) as { data?: { id?: string } };
 		return createResult(true, "WELCOME_DM", Date.now() - start, {
 			dmId: result.data?.id,
 			message,

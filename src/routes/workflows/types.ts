@@ -28,3 +28,24 @@ export interface UpdateWorkflowBody {
 export interface TestWorkflowBody {
 	triggerData?: Record<string, unknown>;
 }
+
+// Aliases for backward compatibility
+export type CreateWorkflowRequest = WorkflowBody;
+export type UpdateWorkflowRequest = UpdateWorkflowBody;
+
+export interface WorkflowResponse {
+	success: boolean;
+	data?: unknown;
+	error?: {
+		code: string;
+		message: string;
+	};
+}
+
+export interface WorkflowListResponse {
+	success: boolean;
+	data: unknown[];
+	meta: {
+		total: number;
+	};
+}

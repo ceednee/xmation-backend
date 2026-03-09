@@ -1,5 +1,10 @@
-import { getRedisClient } from "./redis-client";
 import { clearMemory, getMemoryCacheSize } from "./memory-store";
+
+// Lazy import to avoid circular dependency
+const getRedisClient = () => {
+	const { getRedisClient: getClient } = require("./redis-client");
+	return getClient();
+};
 
 export const flush = async (): Promise<void> => {
 	const redis = getRedisClient();
@@ -19,9 +24,3 @@ export const getStats = (): { usingRedis: boolean; memoryCacheSize: number } => 
 	usingRedis: !!getRedisClient(),
 	memoryCacheSize: getMemoryCacheSize(),
 });
-
-// Backward compatibility - lazy import to avoid circular dependency
-const getRedisClient = () => {
-	const { getRedisClient: getClient } = require("./redis-client");
-	return getClient();
-};

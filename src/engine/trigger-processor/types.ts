@@ -7,6 +7,10 @@ export interface QueuedWorkflow {
 	triggerType: string;
 	triggerData: unknown;
 	enqueuedAt: number;
+	/**
+	 * @deprecated Use enqueuedAt instead
+	 */
+	queuedAt?: number;
 }
 
 export interface EvaluationResult {

@@ -18,7 +18,7 @@ export const sendDMExecutor: ActionExecutor = async (config, context) => {
 			return createResult(false, "SEND_DM", Date.now() - start, undefined, "No user ID provided");
 		}
 
-		const result = await xClient.sendDM(userId, text);
+		const result = await xClient.sendDM(userId, text) as { data?: { id?: string } };
 		return createResult(true, "SEND_DM", Date.now() - start, {
 			dmId: result.data?.id,
 			text,

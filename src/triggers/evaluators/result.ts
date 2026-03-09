@@ -1,4 +1,6 @@
-import type { TriggerResult } from "../types";
+import type { TriggerResult, TriggerEvaluator } from "../types";
+
+export type { TriggerResult, TriggerEvaluator };
 
 export const createResult = (
 	triggered: boolean,

@@ -14,3 +14,18 @@ export interface ScheduledJob {
 	metrics: JobMetrics;
 	timeoutId?: ReturnType<typeof setTimeout>;
 }
+
+/**
+ * @deprecated Use ScheduledJob instead
+ */
+export type CronJob = ScheduledJob;
+
+export interface CronSchedule {
+	expression: string;
+	timezone?: string;
+}
+
+export interface CronManagerOptions {
+	enabled?: boolean;
+	defaultTimezone?: string;
+}

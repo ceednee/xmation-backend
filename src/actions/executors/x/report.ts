@@ -18,7 +18,8 @@ export const reportSpamExecutor: ActionExecutor = async (config, context) => {
 		}
 
 		const result = await xClient.reportSpam(userId, reason);
-		return createResult(true, "REPORT_SPAM", Date.now() - start, { userId, reason, reported: result.reported });
+		const resultData = result as { reported?: boolean };
+		return createResult(true, "REPORT_SPAM", Date.now() - start, { userId, reason, reported: resultData.reported });
 	} catch (error) {
 		return createResult(false, "REPORT_SPAM", Date.now() - start, undefined,
 			error instanceof Error ? error.message : "Failed to report spam");

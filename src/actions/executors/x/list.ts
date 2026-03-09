@@ -21,7 +21,8 @@ export const addToListExecutor: ActionExecutor = async (config, context) => {
 		}
 
 		const result = await xClient.addToList(listId, userId);
-		return createResult(true, "ADD_TO_LIST", Date.now() - start, { listId, userId, added: result.added });
+		const resultData = result as { added?: boolean };
+		return createResult(true, "ADD_TO_LIST", Date.now() - start, { listId, userId, added: resultData.added });
 	} catch (error) {
 		return createResult(false, "ADD_TO_LIST", Date.now() - start, undefined,
 			error instanceof Error ? error.message : "Failed to add to list");

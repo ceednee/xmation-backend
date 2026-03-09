@@ -16,7 +16,7 @@ export const blockUserExecutor: ActionExecutor = async (config, context) => {
 			return createResult(false, "BLOCK_USER", Date.now() - start, undefined, "No user ID provided");
 		}
 
-		const result = await xClient.blockUser(userId);
+		const result = await xClient.blockUser(userId) as { data?: { blocked?: boolean } };
 		return createResult(true, "BLOCK_USER", Date.now() - start, {
 			userId,
 			blocked: result.data?.blocked,

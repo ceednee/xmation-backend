@@ -19,7 +19,8 @@ export const pinTweetExecutor: ActionExecutor = async (config, context) => {
 		}
 
 		const result = await xClient.pinTweet(tweetId);
-		return createResult(true, "PIN_TWEET", Date.now() - start, { tweetId, pinned: result.pinned });
+		const resultData = result as { pinned?: boolean };
+		return createResult(true, "PIN_TWEET", Date.now() - start, { tweetId, pinned: resultData.pinned });
 	} catch (error) {
 		return createResult(false, "PIN_TWEET", Date.now() - start, undefined,
 			error instanceof Error ? error.message : "Failed to pin tweet");

@@ -39,3 +39,53 @@ export const handleExecutionError = (actionType: string, error: unknown, state: 
 		state.firstError = errorMessage;
 	}
 };
+
+/**
+ * Execute multiple actions sequentially.
+ * Handles delays between actions and error aggregation.
+ */
+export async function executeActions(
+	actions: ActionConfig[],
+	context: ExecutionContext,
+): Promise<{
+	actionsExecuted: number;
+	actionsFailed: number;
+	hasErrors: boolean;
+	firstError?: string;
+	logs: string[];
+}> {
+	const state: ExecutionState = {
+		actionsExecuted: 0,
+		actionsFailed: 0,
+		hasErrors: false,
+		logs: [],
+	};
+
+	const executor = new SingleActionExecutor();
+
+	for (const action of actions) {
+		// Handle delay
+		if (action.delay && action.delay > 0) {
+			await sleep(Math.min(action.delay, 5000));
+		}
+
+		try {
+			const result = await executor.execute(action, context);
+			if (result.success) {
+				handleExecutionSuccess(action.type, state);
+			} else {
+				handleExecutionFailure(action.type, result.error, state);
+				if (action.config.continueOnError !== true) {
+					break;
+				}
+			}
+		} catch (error) {
+			handleExecutionError(action.type, error, state);
+			if (action.config.continueOnError !== true) {
+				break;
+			}
+		}
+	}
+
+	return state;
+}

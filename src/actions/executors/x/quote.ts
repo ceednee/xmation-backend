@@ -18,7 +18,7 @@ export const quoteTweetExecutor: ActionExecutor = async (config, context) => {
 			return createResult(false, "QUOTE_TWEET", Date.now() - start, undefined, "No tweet ID provided");
 		}
 
-		const result = await xClient.quoteTweet(tweetId, comment);
+		const result = await xClient.quoteTweet(tweetId, comment) as { data?: { id?: string } };
 		return createResult(true, "QUOTE_TWEET", Date.now() - start, {
 			quoteId: result.data?.id,
 			comment,

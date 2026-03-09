@@ -16,7 +16,7 @@ export const followUserExecutor: ActionExecutor = async (config, context) => {
 			return createResult(false, "FOLLOW_USER", Date.now() - start, undefined, "No user ID provided");
 		}
 
-		const result = await xClient.followUser(userId);
+		const result = await xClient.followUser(userId) as { data?: { following?: boolean } };
 		return createResult(true, "FOLLOW_USER", Date.now() - start, {
 			userId,
 			following: result.data?.following,

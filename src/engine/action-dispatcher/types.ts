@@ -31,3 +31,13 @@ export interface ActionDispatcherConfig {
 	context: ActionContext;
 	startTime: number;
 }
+
+/**
+ * @deprecated Use ActionContext instead
+ */
+export type DispatchContext = ActionContext;
+
+/**
+ * @deprecated Use ActionExecutionResult instead
+ */
+export type DispatchResult = ActionExecutionResult;

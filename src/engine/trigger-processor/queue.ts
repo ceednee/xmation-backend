@@ -3,6 +3,13 @@ import type { TriggerContext } from "../../triggers/types";
 import type { QueuedWorkflow, EvaluationResult } from "./types";
 
 export class WorkflowQueue {
+	/**
+	 * @deprecated Use WorkflowQueue instead
+	 */
+	static QueueManager = WorkflowQueue;
+}
+
+export class QueueManager extends WorkflowQueue {
 	private queue: QueuedWorkflow[] = [];
 
 	add(workflow: Workflow, context: TriggerContext, evaluation: EvaluationResult): boolean {

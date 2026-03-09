@@ -20,7 +20,7 @@ export const thankYouReplyExecutor: ActionExecutor = async (config, context) => 
 			return createResult(false, "THANK_YOU_REPLY", Date.now() - start, undefined, "No tweet ID provided");
 		}
 
-		const result = await xClient.replyToTweet(tweetId, text);
+		const result = await xClient.replyToTweet(tweetId, text) as { data?: { id?: string } };
 		return createResult(true, "THANK_YOU_REPLY", Date.now() - start, {
 			replyId: result.data?.id,
 			text,

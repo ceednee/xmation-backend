@@ -1,10 +1,10 @@
 import type { TweetEntities, TweetUrl, TweetMention, TweetHashtag, RapidApiTweetResponse } from "../../types/rapidapi";
 
-export const extractHashtags = (entities?: TweetEntities): TweetHashtag[] => {
+export const extractHashtags = (entities?: TweetEntities): string[] => {
 	return entities?.hashtags?.map((h) => h.text) || [];
 };
 
-export const extractMentions = (entities?: TweetEntities): TweetMention[] => {
+export const extractMentions = (entities?: TweetEntities): Array<{ screenName: string; name: string; id: string; indices: number[] }> => {
 	return (
 		entities?.user_mentions?.map((m) => ({
 			screenName: m.screen_name,
@@ -15,7 +15,7 @@ export const extractMentions = (entities?: TweetEntities): TweetMention[] => {
 	);
 };
 
-export const extractUrls = (entities?: TweetEntities): TweetUrl[] => {
+export const extractUrls = (entities?: TweetEntities): Array<{ url: string; expandedUrl: string; displayUrl: string; indices: number[] }> => {
 	return (
 		entities?.urls?.map((u) => ({
 			url: u.url,
@@ -30,9 +30,9 @@ export const extractUrls = (entities?: TweetEntities): TweetUrl[] => {
  * Extract all entities from a tweet response
  */
 export const extractEntities = (data?: RapidApiTweetResponse): {
-	hashtags: TweetHashtag[];
-	mentions: TweetMention[];
-	urls: TweetUrl[];
+	hashtags: string[];
+	mentions: Array<{ screenName: string; name: string; id: string; indices: number[] }>;
+	urls: Array<{ url: string; expandedUrl: string; displayUrl: string; indices: number[] }>;
 } => {
 	if (!data?.data?.tweetResult?.legacy?.entities) {
 		return { hashtags: [], mentions: [], urls: [] };

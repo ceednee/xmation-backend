@@ -1,65 +1,135 @@
+/**
+ * Workflow Runner
+ * 
+ * Executes workflows by running their actions in sequence.
+ * 
+ * ## Responsibilities
+ * 
+ * - Validate workflow status before execution
+ * - Build execution context for actions
+ * - Execute actions sequentially
+ * - Track execution history
+ * - Handle delays between actions
+ * - Aggregate results
+ * 
+ * ## Execution Flow
+ * 
+ * ```
+ * execute(workflow, triggerData)
+ *   ↓
+ * Check Status ──paused?──→ Return paused result
+ *   ↓ draft?      ↓
+ *   ↓       Return draft result
+ *   ↓ active
+ *   ↓
+ * Build Context
+ *   ↓
+ * Execute Actions ──each action──→ Build result
+ *   ↓
+ * Log History
+ *   ↓
+ * Return Result
+ * ```
+ * 
+ * ## Action Context
+ * 
+ * Each action receives:
+ * - `userId`: Workflow owner
+ * - `workflowId`: Current workflow
+ * - `runId`: Unique execution ID
+ * - `triggerData`: Data that triggered the workflow
+ * - `previousResults`: Results from prior actions
+ * - `dryRun`: Whether to simulate execution
+ * 
+ * @example
+ * ```typescript
+ * const runner = new WorkflowRunner();
+ * 
+ * const result = await runner.execute(workflow, {
+ *   mentionId: "123",
+ *   text: "@user hello"
+ * });
+ * 
+ * console.log(result.success);           // true/false
+ * console.log(result.actionsExecuted);   // number
+ * console.log(result.error);             // error message if failed
+ * ```
+ */
+
 import type { Workflow } from "../../types";
-import type { WorkflowExecutionResult, ExecutionContext, ExecutionState } from "./types";
-import { createPausedResult, createDraftResult, createSuccessResult } from "./result";
+import type { WorkflowExecutionResult, ExecutionContext } from "./types";
+import { executeActions } from "./executor";
+import { buildPausedResult, buildDraftResult } from "./result";
 import { ExecutionHistory } from "./history";
-import { ActionExecutor } from "./action-executor";
+import { ResultBuilder } from "./result";
 
 export class WorkflowRunner {
-	private actionExecutor: ActionExecutor;
+	private executionLog: Map<string, WorkflowExecutionResult[]> = new Map();
 	private history: ExecutionHistory;
+	private resultBuilder: ResultBuilder;
 
 	constructor() {
-		this.actionExecutor = new ActionExecutor();
 		this.history = new ExecutionHistory();
+		this.resultBuilder = new ResultBuilder();
 	}
 
-	async execute(workflow: Workflow, triggerData: Record<string, unknown>): Promise<WorkflowExecutionResult> {
+	/**
+	 * Execute a workflow with given trigger data.
+	 * 
+	 * @param workflow - The workflow to execute
+	 * @param triggerData - Data that triggered the workflow
+	 * @returns Execution result with status and action results
+	 */
+	async execute(
+		workflow: Workflow,
+		triggerData: Record<string, unknown>,
+	): Promise<WorkflowExecutionResult> {
 		const startedAt = Date.now();
 
+		// Check workflow status
 		if (workflow.status === "paused") {
-			return createPausedResult(workflow._id, workflow.userId, workflow.isDryRun, startedAt);
+			return buildPausedResult(workflow, startedAt);
 		}
 
 		if (workflow.status === "draft") {
-			return createDraftResult(workflow._id, workflow.userId, workflow.isDryRun, startedAt);
+			return buildDraftResult(workflow, startedAt);
 		}
 
-		const mode = workflow.isDryRun ? "dry_run" : "live";
-		const logs: string[] = [`Starting workflow execution: ${workflow.name} (${mode} mode)`];
-
+		// Build execution context
 		const context: ExecutionContext = {
+			workflowId: workflow._id,
 			userId: workflow.userId,
+			runId: `run_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 			triggerData,
 			dryRun: workflow.isDryRun,
 		};
 
-		const state: ExecutionState = {
-			actionsExecuted: 0,
-			actionsFailed: 0,
-			hasErrors: false,
-			logs,
-		};
+		// Execute all actions
+		const execution = await executeActions(workflow.actions, context);
 
-		for (const action of workflow.actions) {
-			await this.actionExecutor.executeWithErrorHandling(action, context, state);
-		}
-
-		const result = createSuccessResult(
-			workflow._id,
-			workflow.userId,
-			mode,
-			state,
+		// Build final result
+		const result = this.resultBuilder.build(
+			workflow,
+			execution,
 			startedAt,
-			triggerData
+			triggerData,
 		);
 
+		// Log execution
 		this.history.log(workflow._id, result);
+
 		return result;
 	}
 
-	getExecutionHistory(workflowId: string): WorkflowExecutionResult[] {
-		return this.history.get(workflowId);
+	/**
+	 * Get execution history for a workflow.
+	 */
+	getHistory(workflowId: string): WorkflowExecutionResult[] {
+		return this.executionLog.get(workflowId) || [];
 	}
 }
 
+/**
+ * Singleton instance for global use.
+ */
 export const workflowRunner = new WorkflowRunner();

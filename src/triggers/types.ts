@@ -4,6 +4,7 @@ export interface TriggerResult {
 	triggerType: string;
 	data?: Record<string, unknown>;
 	timestamp: number;
+	error?: string;
 }
 
 // Trigger evaluator function type

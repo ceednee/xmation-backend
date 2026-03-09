@@ -54,6 +54,46 @@ export interface XUrlEntity {
 	indices: number[];
 }
 
+// Entity types for data extractor
+export interface TweetEntities {
+	hashtags: Array<{ text: string }>;
+	user_mentions: Array<{ screen_name: string; name: string; id_str: string; indices: number[] }>;
+	urls: Array<{ url: string; expanded_url: string; display_url: string; indices: number[] }>;
+}
+
+export interface TweetUrl {
+	url: string;
+	expanded_url: string;
+	display_url: string;
+	indices: number[];
+}
+
+export interface TweetMention {
+	screen_name: string;
+	name: string;
+	id_str: string;
+	indices: number[];
+}
+
+export interface TweetHashtag {
+	text: string;
+	indices?: number[];
+}
+
+export interface TimelineInstruction {
+	type: string;
+	entries?: Array<{
+		entryId: string;
+		content: {
+			itemContent: {
+				tweet_results?: {
+					result: unknown;
+				};
+			};
+		};
+	}>;
+}
+
 // Mention (from mentions.json - same as tweet but with mention context)
 export interface XMention extends XTweet {
 	// Same as XTweet, but specifically for @mentions

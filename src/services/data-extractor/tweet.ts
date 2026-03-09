@@ -60,7 +60,11 @@ export function extractTweets(data: any): XTweet[] {
 					favoriteCount: 0,
 					replyCount: 0,
 					quoteCount: 0,
+					conversationId: "",
 					lang: "en",
+					hashtags: [],
+					mentions: [],
+					urls: [],
 				});
 			}
 		}

@@ -53,12 +53,12 @@ export const convertTweetResultToMention = (tweetResult: TweetResult): XMention 
 		favoriteCount: legacy.favorite_count || 0,
 		replyCount: legacy.reply_count || 0,
 		quoteCount: legacy.quote_count || 0,
-		conversationId: legacy.conversation_id_str,
+		conversationId: legacy.conversation_id_str || "",
 		lang: legacy.lang || "en",
 		views: tweetResult.views?.count,
 		hashtags: extractHashtags(legacy.entities as any),
-		mentions: extractMentions(legacy.entities as any),
-		urls: extractUrls(legacy.entities as any),
+		mentions: extractMentions(legacy.entities as any).map(m => ({ screenName: m.screenName, name: m.name, id: m.id, indices: m.indices })),
+		urls: extractUrls(legacy.entities as any).map(u => ({ url: u.url, expandedUrl: u.expandedUrl, displayUrl: u.displayUrl, indices: u.indices })),
 	};
 };
 

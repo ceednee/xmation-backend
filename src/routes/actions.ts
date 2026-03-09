@@ -114,6 +114,7 @@ export const actionRoutes = new Elysia({ prefix: "/actions" })
 						Record<string, unknown>
 					>,
 					dryRun: b.dryRun ?? true,
+					previousResults: [],
 				},
 			);
 
