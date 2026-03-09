@@ -1,6 +1,46 @@
+/**
+ * Action: WAIT_DELAY
+ * 
+ * Pauses workflow execution for a specified duration.
+ * Useful for rate limiting, spacing out actions, or waiting for external processes.
+ * 
+ * ## Configuration
+ * - `delayMs` (optional) - Delay in milliseconds. Defaults to 5000ms (5 seconds)
+ * - `delay` (optional) - Human-readable delay format (e.g., "5s", "2m", "1h")
+ *   - `s` - seconds
+ *   - `m` - minutes
+ *   - `h` - hours
+ * 
+ * ## Delay Format Examples
+ * - `"5s"` - 5 seconds
+ * - `"30s"` - 30 seconds
+ * - `"2m"` - 2 minutes
+ * - `"1h"` - 1 hour
+ * 
+ * ## Note
+ * - In dry-run mode, the delay is skipped but logged
+ * - Maximum actual delay is capped at 5 seconds for safety
+ * 
+ * ## Example
+ * ```typescript
+ * const config = { delay: "30s" };
+ * const result = await waitDelayExecutor(config, context);
+ * 
+ * // Or using milliseconds
+ * const config2 = { delayMs: 30000 };
+ * const result2 = await waitDelayExecutor(config2, context);
+ * ```
+ */
+
 import type { ActionExecutor } from "../../types";
 import { createResult } from "./base";
 
+/**
+ * Parse human-readable delay format to milliseconds
+ * 
+ * @param delay - Delay string (e.g., "5s", "2m", "1h")
+ * @returns Milliseconds or 0 if invalid format
+ */
 const parseDelay = (delay: string): number => {
 	const match = delay.match(/^(\d+)([smh])$/);
 	if (!match) return 0;
@@ -12,6 +52,14 @@ const parseDelay = (delay: string): number => {
 	return value * (multipliers[unit] || 0);
 };
 
+/**
+ * Executes WAIT_DELAY action
+ * Waits for the specified duration before continuing
+ * 
+ * @param config - Action configuration with delay settings
+ * @param context - Action execution context
+ * @returns Action result with wait details
+ */
 export const waitDelayExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
 

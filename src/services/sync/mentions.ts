@@ -1,6 +1,34 @@
+/**
+ * Mentions Sync
+ * 
+ * Handles synchronization of mentions (tweets mentioning the user).
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * const result = await syncMentions(
+ *   userId,
+ *   xUserId,
+ *   { sinceId: "12345" },
+ *   concurrencyManager,
+ *   recordSync
+ * );
+ * ```
+ */
+
 import type { SyncOptions, SyncResult } from "./types";
 import { createSuccessResult, createErrorResult, createInProgressResult, createRateLimitResult } from "./result";
 
+/**
+ * Sync mentions for a user
+ * 
+ * @param userId - Internal user ID
+ * @param xUserId - X (Twitter) user ID
+ * @param options - Sync options including sinceId and mock data
+ * @param concurrencyManager - Concurrency manager instance
+ * @param recordSync - Function to record sync completion
+ * @returns Sync result
+ */
 export const syncMentions = async (
 	userId: string,
 	xUserId: string,

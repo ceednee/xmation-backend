@@ -1,6 +1,35 @@
+/**
+ * Followers Sync
+ * 
+ * Handles synchronization of follower data.
+ * Detects new and lost followers.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * const result = await syncFollowers(
+ *   userId,
+ *   xUserId,
+ *   { mockData: followers },
+ *   concurrencyManager,
+ *   recordSync
+ * );
+ * ```
+ */
+
 import type { SyncResult } from "./types";
 import { createSuccessResult, createInProgressResult } from "./result";
 
+/**
+ * Sync followers for a user
+ * 
+ * @param userId - Internal user ID
+ * @param xUserId - X (Twitter) user ID
+ * @param options - Sync options including mock data
+ * @param concurrencyManager - Concurrency manager instance
+ * @param recordSync - Function to record sync completion
+ * @returns Sync result
+ */
 export const syncFollowers = async (
 	userId: string,
 	xUserId: string,

@@ -1,6 +1,35 @@
+/**
+ * Action: RETWEET
+ * 
+ * Retweets a specific tweet on X (Twitter).
+ * 
+ * ## Configuration
+ * - `tweetId` (optional) - ID of the tweet to retweet
+ *   - If not provided, uses tweetId from trigger data
+ *   - Falls back to retweetId from trigger data
+ * 
+ * ## Context Data
+ * - `triggerData.tweetId` - Tweet ID to retweet
+ * - `triggerData.retweetId` - Alternative tweet ID source
+ * 
+ * ## Example
+ * ```typescript
+ * const config = { tweetId: "1234567890123456789" };
+ * const result = await retweetExecutor(config, context);
+ * ```
+ */
+
 import type { ActionExecutor } from "../../types";
 import { createResult, getXClient, checkDryRun } from "./base";
 
+/**
+ * Executes RETWEET action
+ * Retweets the specified tweet using the X API
+ * 
+ * @param config - Action configuration with optional tweetId
+ * @param context - Action execution context
+ * @returns Action result with retweet details
+ */
 export const retweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
 	const dryRunError = checkDryRun(context, "RETWEET");

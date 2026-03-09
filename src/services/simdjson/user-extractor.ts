@@ -1,5 +1,22 @@
+/**
+ * SIMDJSON User Extractor
+ * 
+ * High-performance user extraction using simdjson parsing.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Extract user from JSON response
+ * const user = extractUserSimd(jsonString);
+ * if (user) {
+ *   console.log(user.screenName, user.followersCount);
+ * }
+ * ```
+ */
+
 import { parseJson } from "./parser";
 
+/** Extracted user data structure */
 interface UserResult {
 	restId: string;
 	screenName: string;
@@ -15,6 +32,7 @@ interface UserResult {
 	url?: string;
 }
 
+/** Raw user data from API */
 interface UserData {
 	rest_id?: string;
 	legacy?: {
@@ -32,6 +50,12 @@ interface UserData {
 	};
 }
 
+/**
+ * Convert raw user data to typed UserResult
+ * 
+ * @param user - Raw user data from API
+ * @returns Typed user result or null if invalid
+ */
 const convertUserDataToUser = (user: UserData): UserResult | null => {
 	const legacy = user.legacy;
 	if (!legacy) return null;
@@ -52,6 +76,12 @@ const convertUserDataToUser = (user: UserData): UserResult | null => {
 	};
 };
 
+/**
+ * Extract user from a JSON string using simdjson
+ * 
+ * @param jsonString - Raw JSON response
+ * @returns User object or null if extraction fails
+ */
 export function extractUserSimd(jsonString: string): UserResult | null {
 	try {
 		const doc = parseJson(jsonString);

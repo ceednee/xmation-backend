@@ -1,6 +1,24 @@
+/**
+ * Tweet Result Utilities
+ * 
+ * Helper functions for extracting and converting tweet results
+ * from timeline entries.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Extract tweet result from entry
+ * const tweetResult = extractTweetResultFromEntry(entry);
+ * 
+ * // Convert to mention format
+ * const mention = convertTweetResultToMention(tweetResult);
+ * ```
+ */
+
 import type { XMention } from "../../types/rapidapi";
 import { extractHashtags, extractMentions, extractUrls } from "./entities";
 
+/** Tweet result structure from API */
 interface TweetResult {
 	rest_id: string;
 	legacy?: {
@@ -27,6 +45,12 @@ interface TweetResult {
 	views?: { count?: string };
 }
 
+/**
+ * Get user info from tweet result
+ * 
+ * @param tweetResult - Tweet result object
+ * @returns Object with authorId and authorScreenName
+ */
 const getUserInfo = (tweetResult: TweetResult) => {
 	const userResult = tweetResult.core?.user_results?.result;
 	return {
@@ -35,6 +59,12 @@ const getUserInfo = (tweetResult: TweetResult) => {
 	};
 };
 
+/**
+ * Convert tweet result to mention format
+ * 
+ * @param tweetResult - Raw tweet result from API
+ * @returns XMention object or null if invalid
+ */
 export const convertTweetResultToMention = (tweetResult: TweetResult): XMention | null => {
 	const legacy = tweetResult.legacy;
 	if (!legacy) return null;
@@ -62,6 +92,12 @@ export const convertTweetResultToMention = (tweetResult: TweetResult): XMention 
 	};
 };
 
+/**
+ * Extract tweet result from a timeline entry
+ * 
+ * @param entry - Timeline entry
+ * @returns Tweet result or null if not found
+ */
 export const extractTweetResultFromEntry = (entry: unknown): TweetResult | null => {
 	return (entry as any)?.content?.itemContent?.tweet_results?.result || null;
 };

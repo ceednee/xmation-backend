@@ -1,5 +1,33 @@
+/**
+ * SIMDJSON Benchmark
+ * 
+ * Performance benchmarking utility for comparing simdjson vs native JSON.parse.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Benchmark with default 100 iterations
+ * const results = benchmarkParsing(jsonString);
+ * console.log(results.simdjsonTime);  // ms
+ * console.log(results.standardTime);  // ms
+ * console.log(results.speedup);       // multiplier
+ * 
+ * // Benchmark with custom iterations
+ * const results = benchmarkParsing(jsonString, 50);
+ * ```
+ */
+
 import { extractMentionsSimd } from "./tweet-extractor";
 
+/**
+ * Benchmark JSON parsing performance
+ * 
+ * Compares simdjson performance against native JSON.parse.
+ * 
+ * @param jsonString - JSON string to benchmark
+ * @param iterations - Number of iterations (default: 100)
+ * @returns Benchmark results with timings and speedup
+ */
 export function benchmarkParsing(
 	jsonString: string,
 	iterations = 100,

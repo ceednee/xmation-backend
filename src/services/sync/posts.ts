@@ -1,6 +1,34 @@
+/**
+ * Posts Sync
+ * 
+ * Handles synchronization of user's own posts/timeline.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * const result = await syncPosts(
+ *   userId,
+ *   xUserId,
+ *   { mockData: posts },
+ *   concurrencyManager,
+ *   recordSync
+ * );
+ * ```
+ */
+
 import type { SyncResult } from "./types";
 import { createSuccessResult, createInProgressResult } from "./result";
 
+/**
+ * Sync posts for a user
+ * 
+ * @param userId - Internal user ID
+ * @param xUserId - X (Twitter) user ID
+ * @param options - Sync options including mock data
+ * @param concurrencyManager - Concurrency manager instance
+ * @param recordSync - Function to record sync completion
+ * @returns Sync result
+ */
 export const syncPosts = async (
 	userId: string,
 	xUserId: string,

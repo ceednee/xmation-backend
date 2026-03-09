@@ -1,5 +1,29 @@
+/**
+ * Follower Extractor
+ * 
+ * Extracts follower data from X API responses.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Extract followers from API response
+ * const followers = extractFollowers(apiResponse);
+ * 
+ * // Process followers
+ * for (const follower of followers) {
+ *   console.log(`${follower.screenName} (${follower.followersCount} followers)`);
+ * }
+ * ```
+ */
+
 import type { RapidApiFollowersResponse, XFollower } from "../../types/rapidapi";
 
+/**
+ * Extract followers from RapidAPI response
+ * 
+ * @param data - RapidAPI followers response
+ * @returns Array of follower objects
+ */
 export function extractFollowers(data: RapidApiFollowersResponse): XFollower[] {
 	try {
 		const followers: XFollower[] = [];

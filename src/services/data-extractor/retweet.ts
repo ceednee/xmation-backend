@@ -1,5 +1,30 @@
+/**
+ * Retweet Extractor
+ * 
+ * Extracts retweet data from X API responses.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Extract retweets for a specific tweet
+ * const retweets = extractRetweets(apiResponse, "tweet123");
+ * 
+ * // Process retweets
+ * for (const retweet of retweets) {
+ *   console.log(`${retweet.retweeterScreenName} retweeted`);
+ * }
+ * ```
+ */
+
 import type { RapidApiRetweetsResponse, XRetweet } from "../../types/rapidapi";
 
+/**
+ * Extract retweets from RapidAPI response
+ * 
+ * @param data - RapidAPI retweets response
+ * @param tweetId - ID of the tweet being retweeted
+ * @returns Array of retweet objects
+ */
 export function extractRetweets(
 	data: RapidApiRetweetsResponse,
 	tweetId: string,

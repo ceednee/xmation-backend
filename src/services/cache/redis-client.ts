@@ -1,9 +1,46 @@
+/**
+ * Redis Client
+ * 
+ * Redis/Upstash client initialization and connection management.
+ * Provides lazy initialization with connection retry logic.
+ * 
+ * ## Features
+ * 
+ * - **Lazy Initialization**: Client created on first use
+ * - **Auto-Retry**: Retries connection up to 3 times
+ * - **Error Handling**: Graceful fallback to memory cache
+ * - **TLS Support**: Automatic TLS for Upstash connections
+ * 
+ * ## Environment Variables
+ * 
+ * - `USE_UPSTASH` - Enable Redis/Upstash (boolean)
+ * - `UPSTASH_REDIS_REST_URL` - Redis server URL
+ * - `UPSTASH_REDIS_REST_TOKEN` - Authentication token
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Get Redis client (may be null if disabled)
+ * const redis = getRedisClient();
+ * 
+ * // Check if Redis is available
+ * if (isRedisAvailable()) {
+ *   await redis.set("key", "value");
+ * }
+ * ```
+ */
+
 import { Redis } from "ioredis";
 import { config } from "../../config/env";
 import { getHostname } from "./utils";
 
 let redisClient: Redis | null = null;
 
+/**
+ * Create a new Redis client with retry configuration
+ * 
+ * @returns Redis client or null if disabled/error
+ */
 const createRedisClient = (): Redis | null => {
 	if (!config.USE_UPSTASH) return null;
 
@@ -34,6 +71,11 @@ const createRedisClient = (): Redis | null => {
 	}
 };
 
+/**
+ * Get or create the Redis client
+ * 
+ * @returns Redis client instance or null
+ */
 export const getRedisClient = (): Redis | null => {
 	if (!redisClient) {
 		redisClient = createRedisClient();
@@ -41,4 +83,9 @@ export const getRedisClient = (): Redis | null => {
 	return redisClient;
 };
 
+/**
+ * Check if Redis is available and connected
+ * 
+ * @returns true if Redis client is available
+ */
 export const isRedisAvailable = (): boolean => !!getRedisClient();

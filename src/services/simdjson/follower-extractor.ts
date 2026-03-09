@@ -1,7 +1,26 @@
+/**
+ * SIMDJSON Follower Extractor
+ * 
+ * High-performance follower extraction using simdjson parsing.
+ * Optimized for extracting followers from large API responses.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Extract followers from JSON response
+ * const followers = extractFollowersSimd(jsonString);
+ * 
+ * for (const follower of followers) {
+ *   console.log(follower.screenName, follower.followersCount);
+ * }
+ * ```
+ */
+
 import type { XFollower } from "../../types/rapidapi";
 import { parseJson } from "./parser";
 import { getUserTimelineEntries } from "./timeline";
 
+/** Raw user result from API */
 interface UserResult {
 	rest_id?: string;
 	legacy?: {
@@ -15,6 +34,12 @@ interface UserResult {
 	following?: boolean;
 }
 
+/**
+ * Convert raw user result to XFollower format
+ * 
+ * @param userResult - Raw user result from API
+ * @returns XFollower object or null if invalid
+ */
 const convertUserResultToFollower = (userResult: UserResult): XFollower | null => {
 	const legacy = userResult.legacy;
 	if (!legacy) return null;
@@ -31,6 +56,12 @@ const convertUserResultToFollower = (userResult: UserResult): XFollower | null =
 	};
 };
 
+/**
+ * Extract followers from a JSON string using simdjson
+ * 
+ * @param jsonString - Raw JSON response
+ * @returns Array of follower objects
+ */
 export function extractFollowersSimd(jsonString: string): XFollower[] {
 	try {
 		const doc = parseJson(jsonString);

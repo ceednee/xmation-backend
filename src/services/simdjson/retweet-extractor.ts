@@ -1,6 +1,24 @@
+/**
+ * SIMDJSON Retweet Extractor
+ * 
+ * High-performance retweet extraction using simdjson parsing.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Extract retweets for a specific tweet
+ * const retweets = extractRetweetsSimd(jsonString, "tweetId123");
+ * 
+ * for (const retweet of retweets) {
+ *   console.log(retweet.retweeterScreenName);
+ * }
+ * ```
+ */
+
 import { parseJson } from "./parser";
 import { getRetweeterTimelineEntries, getTotalRetweets } from "./timeline";
 
+/** Retweet result structure */
 interface RetweetResult {
 	tweetId: string;
 	retweeterId: string;
@@ -9,6 +27,7 @@ interface RetweetResult {
 	totalRetweets: number;
 }
 
+/** Raw user result from API */
 interface UserResult {
 	rest_id?: string;
 	legacy?: {
@@ -17,6 +36,14 @@ interface UserResult {
 	};
 }
 
+/**
+ * Convert user result to retweet format
+ * 
+ * @param userResult - Raw user result from API
+ * @param tweetId - ID of the tweet being retweeted
+ * @param totalRetweets - Total retweet count
+ * @returns Retweet result or null if invalid
+ */
 const convertUserResultToRetweet = (
 	userResult: UserResult,
 	tweetId: string,
@@ -34,6 +61,13 @@ const convertUserResultToRetweet = (
 	};
 };
 
+/**
+ * Extract retweets from a JSON string using simdjson
+ * 
+ * @param jsonString - Raw JSON response
+ * @param tweetId - ID of the tweet to extract retweets for
+ * @returns Array of retweet objects
+ */
 export function extractRetweetsSimd(jsonString: string, tweetId: string): RetweetResult[] {
 	try {
 		const doc = parseJson(jsonString);

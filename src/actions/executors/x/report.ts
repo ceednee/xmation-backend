@@ -1,6 +1,38 @@
+/**
+ * Action: REPORT_SPAM
+ * 
+ * Reports a user as spam on X (Twitter).
+ * Use responsibly for actual spam accounts violating platform rules.
+ * 
+ * ## Configuration
+ * - `userId` (optional) - X user ID to report
+ *   - If not provided, uses authorId from trigger data
+ * - `reason` (optional) - Reason for the report. Defaults to "spam"
+ * 
+ * ## Context Data
+ * - `triggerData.authorId` - User ID to report (if not in config)
+ * 
+ * ## Example
+ * ```typescript
+ * const config = { 
+ *   userId: "123456789",
+ *   reason: "spam" 
+ * };
+ * const result = await reportSpamExecutor(config, context);
+ * ```
+ */
+
 import type { ActionExecutor } from "../../types";
 import { createResult, getXClient, checkDryRun, getUserId } from "./base";
 
+/**
+ * Executes REPORT_SPAM action
+ * Reports the specified user for spam
+ * 
+ * @param config - Action configuration with optional userId and reason
+ * @param context - Action execution context
+ * @returns Action result with report status
+ */
 export const reportSpamExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
 	const dryRunError = checkDryRun(context, "REPORT_SPAM");

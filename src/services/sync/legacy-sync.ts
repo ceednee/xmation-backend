@@ -1,5 +1,35 @@
+/**
+ * Legacy Sync Functions
+ * 
+ * Backward-compatible wrapper functions for sync operations.
+ * Maintains the original API while using the new SyncService internally.
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Sync mentions
+ * const mentions = await syncMentions(userId, sinceId);
+ * 
+ * // Sync followers
+ * const followers = await syncFollowers(userId, xUserId);
+ * 
+ * // Sync timeline
+ * const timeline = await syncTimeline(userId, screenName);
+ * 
+ * // Full sync
+ * const result = await fullSync(userId, xUserId, screenName);
+ * ```
+ */
+
 import { syncService } from "./service";
 
+/**
+ * Sync mentions (legacy API)
+ * 
+ * @param userId - User ID
+ * @param sinceId - Fetch mentions since this ID
+ * @returns Array of mentions
+ */
 export async function syncMentions(
 	userId: string,
 	sinceId?: string
@@ -8,6 +38,13 @@ export async function syncMentions(
 	return (result.mentions as Array<{ id: string; text: string; createdAt: number }>) || [];
 }
 
+/**
+ * Sync followers (legacy API)
+ * 
+ * @param userId - User ID
+ * @param xUserId - X (Twitter) user ID
+ * @returns Follower data with new followers and unfollows
+ */
 export async function syncFollowers(
 	userId: string,
 	xUserId: string
@@ -24,6 +61,13 @@ export async function syncFollowers(
 	};
 }
 
+/**
+ * Sync timeline/posts (legacy API)
+ * 
+ * @param userId - User ID
+ * @param _screenName - Screen name (unused, kept for compatibility)
+ * @returns Timeline data with tweets and last post time
+ */
 export async function syncTimeline(
 	userId: string,
 	_screenName: string
@@ -38,6 +82,14 @@ export async function syncTimeline(
 	return { tweets: posts, lastPostTime };
 }
 
+/**
+ * Full sync - sync all data types (legacy API)
+ * 
+ * @param userId - User ID
+ * @param xUserId - X (Twitter) user ID
+ * @param screenName - X screen name
+ * @returns Complete sync results
+ */
 export async function fullSync(
 	userId: string,
 	xUserId: string,

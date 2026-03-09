@@ -63,11 +63,32 @@ import { buildPausedResult, buildDraftResult } from "./result";
 import { ExecutionHistory } from "./history";
 import { ResultBuilder } from "./result";
 
+/**
+ * Executes workflows by running their actions in sequence.
+ * 
+ * The WorkflowRunner is responsible for orchestrating the execution of
+ * workflow actions, handling status checks, building context, and
+ * aggregating results.
+ * 
+ * @example
+ * ```typescript
+ * const runner = new WorkflowRunner();
+ * 
+ * // Execute a workflow
+ * const result = await runner.execute(workflow, { mentionId: "123" });
+ * 
+ * // Check execution history
+ * const history = runner.getHistory(workflow._id);
+ * ```
+ */
 export class WorkflowRunner {
 	private executionLog: Map<string, WorkflowExecutionResult[]> = new Map();
 	private history: ExecutionHistory;
 	private resultBuilder: ResultBuilder;
 
+	/**
+	 * Creates a new WorkflowRunner with history tracking and result building.
+	 */
 	constructor() {
 		this.history = new ExecutionHistory();
 		this.resultBuilder = new ResultBuilder();
@@ -75,6 +96,10 @@ export class WorkflowRunner {
 
 	/**
 	 * Execute a workflow with given trigger data.
+	 * 
+	 * Checks workflow status first (returns early for paused/draft workflows),
+	 * builds execution context, runs all actions sequentially, and returns
+	 * a comprehensive execution result.
 	 * 
 	 * @param workflow - The workflow to execute
 	 * @param triggerData - Data that triggered the workflow
@@ -123,6 +148,9 @@ export class WorkflowRunner {
 
 	/**
 	 * Get execution history for a workflow.
+	 * 
+	 * @param workflowId - The ID of the workflow to get history for
+	 * @returns Array of execution results for the workflow
 	 */
 	getHistory(workflowId: string): WorkflowExecutionResult[] {
 		return this.executionLog.get(workflowId) || [];
@@ -131,5 +159,7 @@ export class WorkflowRunner {
 
 /**
  * Singleton instance for global use.
+ * 
+ * Use this instance for standard workflow execution throughout the application.
  */
 export const workflowRunner = new WorkflowRunner();
