@@ -1,3 +1,54 @@
+/**
+ * Trigger Engine Service
+ * 
+ * Core service for evaluating workflow triggers against incoming X (Twitter) data.
+ * Determines which workflows should execute based on trigger conditions.
+ * 
+ * ## Key Concepts
+ * 
+ * - **Trigger Evaluation**: Checks if trigger conditions match incoming data
+ * - **OR Logic**: Workflows trigger if ANY of their triggers match (not all)
+ * - **Context Building**: Creates trigger context from X API data
+ * - **Data Formatting**: Transforms trigger results for action execution
+ * 
+ * ## Evaluation Flow
+ * 
+ * ```
+ * X Data → Build Context → Evaluate Triggers → Return Results
+ *                ↓
+ *         For each workflow:
+ *           - Check enabled triggers
+ *           - Evaluate each trigger
+ *           - Return triggered if any match
+ * ```
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Build context from X data
+ * const context = buildTriggerContext(userId, xUserId, {
+ *   mentions: newMentions,
+ *   followers: newFollowers,
+ *   posts: recentPosts,
+ * });
+ * 
+ * // Evaluate single trigger
+ * const result = await evaluateTrigger(triggerConfig, context);
+ * 
+ * // Evaluate all triggers for a workflow
+ * const workflowResult = await evaluateWorkflowTriggers(workflow, context);
+ * 
+ * // Evaluate multiple workflows
+ * const results = await evaluateWorkflows(workflows, context);
+ * 
+ * // Get only triggered workflows
+ * const triggered = await getTriggeredWorkflows(workflows, context);
+ * 
+ * // Format data for actions
+ * const actionData = formatTriggerData(workflowResult);
+ * ```
+ */
+
 import { getTriggerDefinition } from "../triggers/evaluators";
 import type {
 	DMData,
@@ -12,6 +63,9 @@ import type {
 } from "../triggers/types";
 import type { TriggerConfig, Workflow } from "../types";
 
+/**
+ * Result of evaluating all triggers for a workflow
+ */
 export interface EvaluationResult {
 	workflowId: string;
 	triggered: boolean;
@@ -20,7 +74,11 @@ export interface EvaluationResult {
 }
 
 /**
- * Evaluate a single trigger
+ * Evaluate a single trigger against the trigger context
+ * 
+ * @param trigger - Trigger configuration to evaluate
+ * @param context - Trigger context with X data
+ * @returns Trigger result indicating if conditions were met
  */
 export async function evaluateTrigger(
 	trigger: TriggerConfig,
@@ -56,7 +114,12 @@ export async function evaluateTrigger(
 }
 
 /**
- * Evaluate all triggers for a workflow
+ * Evaluate all enabled triggers for a workflow
+ * Workflow triggers if ANY of its triggers match (OR logic)
+ * 
+ * @param workflow - Workflow to evaluate
+ * @param context - Trigger context with X data
+ * @returns Evaluation result with all trigger results
  */
 export async function evaluateWorkflowTriggers(
 	workflow: Workflow,
@@ -90,7 +153,11 @@ export async function evaluateWorkflowTriggers(
 }
 
 /**
- * Evaluate multiple workflows
+ * Evaluate multiple workflows against the same context
+ * 
+ * @param workflows - Array of workflows to evaluate
+ * @param context - Trigger context with X data
+ * @returns Array of evaluation results
  */
 export async function evaluateWorkflows(
 	workflows: Workflow[],
@@ -104,7 +171,11 @@ export async function evaluateWorkflows(
 }
 
 /**
- * Get triggered workflows only
+ * Get only the workflows that triggered
+ * 
+ * @param workflows - Array of workflows to evaluate
+ * @param context - Trigger context with X data
+ * @returns Array of triggered workflows with their results
  */
 export async function getTriggeredWorkflows(
 	workflows: Workflow[],
@@ -127,7 +198,12 @@ export async function getTriggeredWorkflows(
 }
 
 /**
- * Build trigger context from X data
+ * Build trigger context from X API data
+ * 
+ * @param userId - Internal user ID
+ * @param xUserId - X (Twitter) user ID
+ * @param data - X data including mentions, followers, posts, etc.
+ * @returns Trigger context for evaluation
  */
 export function buildTriggerContext(
 	userId: string,
@@ -162,6 +238,10 @@ export function buildTriggerContext(
 
 /**
  * Format trigger data for action execution
+ * Extracts relevant data from the primary triggered trigger
+ * 
+ * @param results - Workflow evaluation results
+ * @returns Formatted data for action context
  */
 export function formatTriggerData(
 	results: EvaluationResult,

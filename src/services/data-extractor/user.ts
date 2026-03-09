@@ -1,5 +1,18 @@
+/**
+ * User Data Extractor
+ * 
+ * Extracts user profile data from X (Twitter) API responses.
+ * Transforms RapidAPI response format to internal XUser type.
+ */
+
 import type { RapidApiUserResponse, XUser } from "../../types/rapidapi";
 
+/**
+ * Extract user profile from API response
+ * 
+ * @param data - RapidAPI user response
+ * @returns XUser object or null if extraction fails
+ */
 export function extractUser(data: RapidApiUserResponse): XUser | null {
 	try {
 		const user = data?.data?.user?.result;

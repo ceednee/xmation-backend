@@ -1,6 +1,19 @@
+/**
+ * Tweet Data Extractor
+ * 
+ * Extracts tweet data from X (Twitter) API responses.
+ * Supports single tweet extraction and timeline extraction.
+ */
+
 import type { RapidApiTweetResponse, XTweet } from "../../types/rapidapi";
 import { extractHashtags, extractMentions, extractUrls } from "./entities";
 
+/**
+ * Extract a single tweet from API response
+ * 
+ * @param data - RapidAPI tweet response
+ * @returns XTweet object or null if extraction fails
+ */
 export function extractTweet(data: RapidApiTweetResponse): XTweet | null {
 	try {
 		const tweet = data?.data?.tweetResult;
@@ -37,7 +50,10 @@ export function extractTweet(data: RapidApiTweetResponse): XTweet | null {
 }
 
 /**
- * Extract multiple tweets from a timeline response.
+ * Extract multiple tweets from a timeline response
+ * 
+ * @param data - Timeline response data
+ * @returns Array of XTweet objects (may be partial data)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractTweets(data: any): XTweet[] {
