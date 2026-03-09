@@ -1,12 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
-import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  // Convex Auth tables (users, sessions, accounts, etc.)
-  ...authTables,
-
-  // Extended user table with X OAuth data
+  // Users table
   users: defineTable({
     // Auth fields are auto-added by authTables
     
