@@ -4,17 +4,13 @@ import {
 	getAllActionDefinitions,
 	validateActionConfig,
 } from "../actions/executors";
-import { protectedRoute } from "../middleware/convex-auth";
 import { createActionContext, executeAction } from "../services/action-engine";
 import type { ActionType } from "../types";
 
-export const actionRoutes = new Elysia({ prefix: "/actions" })
-	// Apply auth middleware
-	.onBeforeHandle(async (context) => {
-		const result = await protectedRoute()(context);
-		if (result) return result;
-	})
+// Placeholder user ID for auth-less mode
+const PLACEHOLDER_USER_ID = "user_placeholder";
 
+export const actionRoutes = new Elysia({ prefix: "/actions" })
 	// GET /actions - List all available actions
 	.get("/", () => {
 		const definitions = getAllActionDefinitions();
@@ -92,14 +88,8 @@ export const actionRoutes = new Elysia({ prefix: "/actions" })
 	// POST /actions/test - Test an action
 	.post(
 		"/test",
-		async ({ body, request }: Context) => {
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
+		async ({ body }: Context) => {
+			const userId = PLACEHOLDER_USER_ID;
 			const b = body as {
 				actionType: ActionType;
 				config: Record<string, unknown>;

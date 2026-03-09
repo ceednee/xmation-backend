@@ -2,8 +2,7 @@ import { randomBytes } from "node:crypto";
 import { ConvexHttpClient } from "convex/browser";
 import { type Context, Elysia, t } from "elysia";
 import { config } from "../config/env";
-import { protectedRoute } from "../middleware/convex-auth";
-import { getUserIdFromToken } from "../utils/token-verifier";
+
 import type {
 	ActionConfig,
 	ActionType,
@@ -82,46 +81,17 @@ const updateWorkflowSchema = t.Partial(
 const generateId = () =>
 	`wf_${Date.now()}_${randomBytes(4).toString("hex")}`;
 
-export const workflowRoutes = new Elysia({ prefix: "/workflows" })
-	// Apply auth middleware to all routes
-	.onBeforeHandle(async (context) => {
-		// Skip auth for health check
-		if (context.request.url.includes("/health")) return;
+// Placeholder user ID for auth-less mode
+const PLACEHOLDER_USER_ID = "user_placeholder";
 
-		const result = await protectedRoute()(context);
-		if (result) return result;
-	})
+export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 
 	// GET /workflows - List workflows
 	.get(
 		"/",
-		async ({ query, request, set }) => {
-			const authHeader = request.headers.get("authorization");
-			if (!authHeader) {
-				set.status = 401;
-				return {
-					success: false,
-					error: { code: "NO_TOKEN", message: "Authorization required" },
-				};
-			}
-
+		async ({ query, set }) => {
 			try {
-				// Get user ID from token
-				const userId = getUserIdFromToken(authHeader.replace("Bearer ", ""));
-				
-				// In test environment, fall back to header if token parsing fails
-				const effectiveUserId = userId || request.headers.get("x-user-id");
-				
-				if (!effectiveUserId) {
-					set.status = 401;
-					return {
-						success: false,
-						error: { code: "NO_USER", message: "User ID required" },
-					};
-				}
-
 				// In test environment, return mock data
-				// In production, this would query Convex
 				if (config.IS_TEST) {
 					return {
 						success: true,
@@ -168,28 +138,9 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// POST /workflows - Create workflow
 	.post(
 		"/",
-		async ({ body, request, set }: Context & { body: WorkflowBody }) => {
-			const authHeader = request.headers.get("authorization");
-			if (!authHeader) {
-				set.status = 401;
-				return {
-					success: false,
-					error: { code: "NO_TOKEN", message: "Authorization required" },
-				};
-			}
-
+		async ({ body, set }: Context & { body: WorkflowBody }) => {
 			try {
-				// Get user ID from token
-				const userId = getUserIdFromToken(authHeader.replace("Bearer ", ""));
-				const effectiveUserId = userId || request.headers.get("x-user-id");
-				
-				if (!effectiveUserId) {
-					set.status = 401;
-					return {
-						success: false,
-						error: { code: "NO_USER", message: "User ID required" },
-					};
-				}
+				const effectiveUserId = PLACEHOLDER_USER_ID;
 
 				// In test environment, create mock workflow
 				if (config.IS_TEST) {
@@ -267,16 +218,7 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	)
 
 	// GET /workflows/:id - Get workflow
-	.get("/:id", async ({ params, request, set }: Context & { params: { id: string } }) => {
-		const authHeader = request.headers.get("authorization");
-		if (!authHeader) {
-			set.status = 401;
-			return {
-				success: false,
-				error: { code: "NO_TOKEN", message: "Authorization required" },
-			};
-		}
-
+	.get("/:id", async ({ params, set }: Context & { params: { id: string } }) => {
 		try {
 			// In test environment, return mock 404
 			if (config.IS_TEST) {
@@ -311,18 +253,6 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				data: workflow,
 			};
 		} catch (error) {
-			// Check if error is access denied
-			if (error instanceof Error && error.message.includes("Access denied")) {
-				set.status = 403;
-				return {
-					success: false,
-					error: {
-						code: "FORBIDDEN",
-						message: "Access denied",
-					},
-				};
-			}
-
 			console.error("Failed to get workflow:", error);
 			set.status = 500;
 			return {
@@ -341,18 +271,8 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 		async ({
 			params,
 			body,
-			request,
 			set,
 		}: Context & { params: { id: string }; body: UpdateWorkflowBody }) => {
-			const authHeader = request.headers.get("authorization");
-			if (!authHeader) {
-				set.status = 401;
-				return {
-					success: false,
-					error: { code: "NO_TOKEN", message: "Authorization required" },
-				};
-			}
-
 			try {
 				// In test environment, return mock 404
 				if (config.IS_TEST) {
@@ -382,13 +302,6 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				};
 			} catch (error) {
 				if (error instanceof Error) {
-					if (error.message.includes("Access denied")) {
-						set.status = 403;
-						return {
-							success: false,
-							error: { code: "FORBIDDEN", message: "Access denied" },
-						};
-					}
 					if (error.message.includes("not found")) {
 						set.status = 404;
 						return {
@@ -415,16 +328,7 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	)
 
 	// DELETE /workflows/:id - Delete workflow
-	.delete("/:id", async ({ params, request, set }: Context & { params: { id: string } }) => {
-		const authHeader = request.headers.get("authorization");
-		if (!authHeader) {
-			set.status = 401;
-			return {
-				success: false,
-				error: { code: "NO_TOKEN", message: "Authorization required" },
-			};
-		}
-
+	.delete("/:id", async ({ params, set }: Context & { params: { id: string } }) => {
 		try {
 			// In test environment, return success
 			if (config.IS_TEST) {
@@ -445,13 +349,6 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 			};
 		} catch (error) {
 			if (error instanceof Error) {
-				if (error.message.includes("Access denied")) {
-					set.status = 403;
-					return {
-						success: false,
-						error: { code: "FORBIDDEN", message: "Access denied" },
-					};
-				}
 				if (error.message.includes("not found")) {
 					set.status = 404;
 					return {
@@ -476,16 +373,7 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// POST /workflows/:id/activate - Activate workflow
 	.post(
 		"/:id/activate",
-		async ({ params, request, set }: Context & { params: { id: string } }) => {
-			const authHeader = request.headers.get("authorization");
-			if (!authHeader) {
-				set.status = 401;
-				return {
-					success: false,
-					error: { code: "NO_TOKEN", message: "Authorization required" },
-				};
-			}
-
+		async ({ params, set }: Context & { params: { id: string } }) => {
 			try {
 				// In test environment, return mock 404
 				if (config.IS_TEST) {
@@ -511,13 +399,6 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				};
 			} catch (error) {
 				if (error instanceof Error) {
-					if (error.message.includes("Access denied")) {
-						set.status = 403;
-						return {
-							success: false,
-							error: { code: "FORBIDDEN", message: "Access denied" },
-						};
-					}
 					if (error.message.includes("not found")) {
 						set.status = 404;
 						return {
@@ -550,16 +431,7 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 	// POST /workflows/:id/pause - Pause workflow
 	.post(
 		"/:id/pause",
-		async ({ params, request, set }: Context & { params: { id: string } }) => {
-			const authHeader = request.headers.get("authorization");
-			if (!authHeader) {
-				set.status = 401;
-				return {
-					success: false,
-					error: { code: "NO_TOKEN", message: "Authorization required" },
-				};
-			}
-
+		async ({ params, set }: Context & { params: { id: string } }) => {
 			try {
 				// In test environment, return mock 404
 				if (config.IS_TEST) {
@@ -585,13 +457,6 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				};
 			} catch (error) {
 				if (error instanceof Error) {
-					if (error.message.includes("Access denied")) {
-						set.status = 403;
-						return {
-							success: false,
-							error: { code: "FORBIDDEN", message: "Access denied" },
-						};
-					}
 					if (error.message.includes("not found")) {
 						set.status = 404;
 						return {
@@ -627,18 +492,8 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 		async ({
 			params,
 			body,
-			request,
 			set,
 		}: Context & { params: { id: string }; body: TestWorkflowBody | null }) => {
-			const authHeader = request.headers.get("authorization");
-			if (!authHeader) {
-				set.status = 401;
-				return {
-					success: false,
-					error: { code: "NO_TOKEN", message: "Authorization required" },
-				};
-			}
-
 			try {
 				const triggerData = body?.triggerData || {};
 
@@ -678,13 +533,6 @@ export const workflowRoutes = new Elysia({ prefix: "/workflows" })
 				};
 			} catch (error) {
 				if (error instanceof Error) {
-					if (error.message.includes("Access denied")) {
-						set.status = 403;
-						return {
-							success: false,
-							error: { code: "FORBIDDEN", message: "Access denied" },
-						};
-					}
 					if (error.message.includes("not found")) {
 						set.status = 404;
 						return {

@@ -1,23 +1,13 @@
 import { type Context, Elysia, t } from "elysia";
-import { protectedRoute } from "../middleware/convex-auth";
 import * as syncService from "../services/sync-service";
 
-export const syncRoutes = new Elysia({ prefix: "/sync" })
-	// Apply auth middleware
-	.onBeforeHandle(async (context) => {
-		const result = await protectedRoute()(context);
-		if (result) return result;
-	})
+// Placeholder user ID for auth-less mode
+const PLACEHOLDER_USER_ID = "user_placeholder";
 
+export const syncRoutes = new Elysia({ prefix: "/sync" })
 	// GET /sync/status - Get sync status
-	.get("/status", async ({ request }: Context) => {
-		const userId = request.headers.get("x-user-id");
-		if (!userId) {
-			return {
-				success: false,
-				error: { code: "NO_USER", message: "User ID required" },
-			};
-		}
+	.get("/status", async () => {
+		const userId = PLACEHOLDER_USER_ID;
 		const status = await syncService.getSyncStatus(userId);
 
 		return {
@@ -30,16 +20,9 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 	.post(
 		"/mentions",
 		async ({
-			request,
 			body,
 		}: Context & { body: { sinceId?: string } | null }) => {
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
+			const userId = PLACEHOLDER_USER_ID;
 			const sinceId = body?.sinceId;
 
 			const mentions = await syncService.syncMentions(userId, sinceId);
@@ -65,17 +48,10 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 	.post(
 		"/followers",
 		async ({
-			request,
 			body,
 		}: Context & { body: { xUserId?: string } | null }) => {
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
-			const xUserId = body?.xUserId || request.headers.get("x-x-user-id");
+			const userId = PLACEHOLDER_USER_ID;
+			const xUserId = body?.xUserId;
 
 			if (!xUserId) {
 				return {
@@ -108,18 +84,10 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 	.post(
 		"/timeline",
 		async ({
-			request,
 			body,
 		}: Context & { body: { screenName?: string } | null }) => {
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
-			const screenName =
-				body?.screenName || request.headers.get("x-x-username");
+			const userId = PLACEHOLDER_USER_ID;
+			const screenName = body?.screenName;
 
 			if (!screenName) {
 				return {
@@ -154,21 +122,13 @@ export const syncRoutes = new Elysia({ prefix: "/sync" })
 	.post(
 		"/full",
 		async ({
-			request,
 			body,
 		}: Context & {
 			body: { xUserId?: string; screenName?: string } | null;
 		}) => {
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
-			const xUserId = body?.xUserId || request.headers.get("x-x-user-id");
-			const screenName =
-				body?.screenName || request.headers.get("x-x-username");
+			const userId = PLACEHOLDER_USER_ID;
+			const xUserId = body?.xUserId;
+			const screenName = body?.screenName;
 
 			if (!xUserId || !screenName) {
 				return {

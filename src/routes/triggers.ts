@@ -1,5 +1,4 @@
 import { type Context, Elysia, t } from "elysia";
-import { protectedRoute } from "../middleware/convex-auth";
 import {
 	buildTriggerContext,
 	evaluateTrigger,
@@ -11,16 +10,13 @@ import {
 } from "../triggers/evaluators";
 import type { TriggerType, Workflow } from "../types";
 
+// Placeholder user ID for auth-less mode
+const PLACEHOLDER_USER_ID = "user_placeholder";
+
 // In-memory store for MVP
 const workflowsStore = new Map<string, Workflow>();
 
 export const triggerRoutes = new Elysia({ prefix: "/triggers" })
-	// Apply auth middleware
-	.onBeforeHandle(async (context) => {
-		const result = await protectedRoute()(context);
-		if (result) return result;
-	})
-
 	// GET /triggers - List all available triggers
 	.get("/", () => {
 		const definitions = getAllTriggerDefinitions();
@@ -65,14 +61,8 @@ export const triggerRoutes = new Elysia({ prefix: "/triggers" })
 	// POST /triggers/test - Test a trigger
 	.post(
 		"/test",
-		async ({ body, request }: Context) => {
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
+		async ({ body }: Context) => {
+			const userId = PLACEHOLDER_USER_ID;
 			const b = body as {
 				triggerType: TriggerType;
 				config?: Record<string, unknown>;
@@ -137,7 +127,7 @@ export const triggerRoutes = new Elysia({ prefix: "/triggers" })
 	// POST /triggers/evaluate-workflow/:id - Evaluate workflow triggers
 	.post(
 		"/evaluate-workflow/:id",
-		async ({ params, body, request, set }: Context) => {
+		async ({ params, body, set }: Context) => {
 			const workflow = workflowsStore.get(params.id);
 
 			if (!workflow) {
@@ -151,13 +141,7 @@ export const triggerRoutes = new Elysia({ prefix: "/triggers" })
 				};
 			}
 
-			const userId = request.headers.get("x-user-id");
-			if (!userId) {
-				return {
-					success: false,
-					error: { code: "NO_USER", message: "User ID required" },
-				};
-			}
+			const userId = PLACEHOLDER_USER_ID;
 			const b = body as { xUserId?: string; context?: Record<string, unknown> };
 
 			const contextData = b.context || {};
