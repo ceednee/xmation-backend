@@ -1,3 +1,30 @@
+/**
+ * Encryption Service
+ * 
+ * Provides AES-256-GCM encryption for sensitive data including
+ * X (Twitter) OAuth tokens stored in the database.
+ * 
+ * ## Security
+ * 
+ * - Algorithm: AES-256-GCM (authenticated encryption)
+ * - Key: Derived from ENCRYPTION_KEY env var using scrypt
+ * - IV: Random 16 bytes per encryption
+ * - Auth Tag: 16 bytes for integrity verification
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * // Encrypt sensitive data
+ * const encrypted = encrypt(secretData);
+ * 
+ * // Decrypt when needed
+ * const decrypted = decrypt(encrypted);
+ * 
+ * // Encrypt X tokens for storage
+ * const tokens = encryptXTokens(accessToken, refreshToken);
+ * ```
+ */
+
 import {
 	createCipheriv,
 	createDecipheriv,
@@ -10,7 +37,10 @@ const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
-// Derive key from master secret (in production, use env var)
+/**
+ * Derive encryption key from master secret
+ * Uses scrypt key derivation with salt
+ */
 const getMasterKey = (): Buffer => {
 	const key = process.env.ENCRYPTION_KEY;
 	if (!key || key.length < 32) {
@@ -23,6 +53,9 @@ const getMasterKey = (): Buffer => {
 
 let MASTER_KEY: Buffer | null = null;
 
+/**
+ * Get or initialize the master encryption key
+ */
 const getKey = (): Buffer => {
 	if (!MASTER_KEY) {
 		MASTER_KEY = getMasterKey();
@@ -32,7 +65,11 @@ const getKey = (): Buffer => {
 
 /**
  * Encrypt text using AES-256-GCM
+ * 
  * Format: iv:authTag:ciphertext (hex encoded)
+ * 
+ * @param text - Plain text to encrypt
+ * @returns Encrypted string in format iv:authTag:ciphertext
  */
 export function encrypt(text: string): string {
 	const iv = randomBytes(IV_LENGTH);
@@ -49,6 +86,10 @@ export function encrypt(text: string): string {
 
 /**
  * Decrypt text using AES-256-GCM
+ * 
+ * @param encryptedData - Encrypted string in format iv:authTag:ciphertext
+ * @returns Decrypted plain text
+ * @throws Error if format is invalid or decryption fails
  */
 export function decrypt(encryptedData: string): string {
 	const parts = encryptedData.split(":");
@@ -72,7 +113,11 @@ export function decrypt(encryptedData: string): string {
 }
 
 /**
- * Encrypt X tokens for storage
+ * Encrypt X OAuth tokens for database storage
+ * 
+ * @param accessToken - X API access token
+ * @param refreshToken - X API refresh token
+ * @returns Object with encrypted tokens
  */
 export function encryptXTokens(accessToken: string, refreshToken: string) {
 	return {
@@ -82,7 +127,11 @@ export function encryptXTokens(accessToken: string, refreshToken: string) {
 }
 
 /**
- * Decrypt X tokens from storage
+ * Decrypt X OAuth tokens from database storage
+ * 
+ * @param encryptedAccessToken - Encrypted access token
+ * @param encryptedRefreshToken - Encrypted refresh token
+ * @returns Object with decrypted tokens
  */
 export function decryptXTokens(
 	encryptedAccessToken: string,

@@ -1,3 +1,39 @@
+/**
+ * Security Middleware
+ * 
+ * Provides security headers and request validation for the API.
+ * Implements OWASP security best practices.
+ * 
+ * ## Features
+ * 
+ * - Security headers (CSP, HSTS, X-Frame-Options, etc.)
+ * - Request body size limiting
+ * - Client IP extraction with proxy support
+ * - Server fingerprinting removal
+ * 
+ * ## Security Headers Added
+ * 
+ * | Header | Value | Purpose |
+ * |--------|-------|---------|
+ * | X-Frame-Options | DENY | Prevent clickjacking |
+ * | X-Content-Type-Options | nosniff | Prevent MIME sniffing |
+ * | X-XSS-Protection | 1; mode=block | XSS protection (legacy) |
+ * | Referrer-Policy | strict-origin-when-cross-origin | Control referrer info |
+ * | CSP | default-src 'self'... | Content Security Policy |
+ * | HSTS | max-age=31536000 | HTTPS enforcement (prod) |
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * import { Elysia } from "elysia";
+ * import { securityHeaders, requestValidation } from "./middleware/security";
+ * 
+ * const app = new Elysia()
+ *   .use(securityHeaders)
+ *   .use(requestValidation);
+ * ```
+ */
+
 import type { Elysia } from "elysia";
 import { config } from "../config/env";
 
@@ -75,6 +111,9 @@ export const requestValidation = (app: Elysia) => {
 /**
  * Get client IP from request
  * Handles X-Forwarded-For header for proxies
+ * 
+ * @param request - Incoming request
+ * @returns Client IP address
  */
 export const getClientIP = (request: Request): string => {
 	const forwarded = request.headers.get("x-forwarded-for");

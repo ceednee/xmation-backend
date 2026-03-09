@@ -1,3 +1,44 @@
+/**
+ * Xmation Backend API
+ * 
+ * Main application entry point. Sets up the Elysia server with
+ * middleware, routes, and security configurations.
+ * 
+ * ## Architecture
+ * 
+ * ```
+ * ┌─────────────────────────────────────────┐
+ * │           Elysia Server                 │
+ * ├─────────────────────────────────────────┤
+ * │  Security → CORS → Swagger → Routes    │
+ * ├─────────────────────────────────────────┤
+ * │  /health    - Health check             │
+ * │  /auth      - Authentication           │
+ * │  /workflows - Workflow CRUD            │
+ * │  /triggers  - Trigger management       │
+ * │  /actions   - Action execution         │
+ * │  /sync      - Data synchronization     │
+ * └─────────────────────────────────────────┘
+ * ```
+ * 
+ * ## Middleware Stack
+ * 
+ * 1. **Request Validation** - Body size limits
+ * 2. **Security Headers** - CSP, HSTS, etc.
+ * 3. **CORS** - Cross-origin request handling
+ * 4. **Swagger** - API documentation
+ * 
+ * ## Usage
+ * 
+ * ```bash
+ * # Development
+ * bun run dev
+ * 
+ * # Production
+ * bun start
+ * ```
+ */
+
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
@@ -9,7 +50,10 @@ import syncRoutes from "./routes/sync";
 import triggerRoutes from "./routes/triggers";
 import workflowRoutes from "./routes/workflows";
 
-// Health check endpoint (no auth required)
+/**
+ * Health check endpoint (no auth required)
+ * Used by load balancers and monitoring systems
+ */
 const healthRoutes = new Elysia({ prefix: "/health" }).get("/", () => ({
 	status: "ok",
 	version: "1.0.0",
@@ -17,7 +61,10 @@ const healthRoutes = new Elysia({ prefix: "/health" }).get("/", () => ({
 	timestamp: Date.now(),
 }));
 
-// Main app
+/**
+ * Main Elysia application instance
+ * Configured with security middleware and all API routes
+ */
 const app = new Elysia()
 	// Security middleware (applied first)
 	.use(requestValidation)
@@ -101,6 +148,7 @@ const app = new Elysia()
 
 	.listen(config.PORT);
 
+// Startup logging
 console.log(
 	`🚀 Xmation Backend API running at ${app.server?.hostname}:${app.server?.port}`,
 );

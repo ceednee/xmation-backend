@@ -1,6 +1,38 @@
+/**
+ * Environment Configuration
+ * 
+ * Validates and provides typed access to environment variables.
+ * Uses Zod for schema validation with sensible defaults for development.
+ * 
+ * ## Required Environment Variables
+ * 
+ * - `X_CLIENT_ID` - X (Twitter) OAuth client ID
+ * - `X_CLIENT_SECRET` - X (Twitter) OAuth client secret
+ * - `ENCRYPTION_KEY` - Min 32 chars, strong encryption key
+ * - `RAPIDAPI_KEY` - RapidAPI authentication key
+ * 
+ * ## Optional Environment Variables
+ * 
+ * - `PORT` - Server port (default: 3000)
+ * - `NODE_ENV` - Environment mode (default: development)
+ * - `CONVEX_URL` - Convex database URL (default: localhost)
+ * - `REDIS_URL` - Redis connection URL (default: localhost)
+ * - `ALLOWED_ORIGINS` - CORS origins (default: localhost:3000,5173)
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * import { config } from "./config/env";
+ * 
+ * // Access typed config
+ * const port = config.PORT;
+ * const isProduction = config.IS_PROD;
+ * ```
+ */
+
 import { z } from "zod";
 
-// Environment variable schema
+// Environment variable schema with validation
 const envSchema = z.object({
 	PORT: z.string().default("3000"),
 	NODE_ENV: z
@@ -42,6 +74,10 @@ if (!parsed.success) {
 	process.exit(1);
 }
 
+/**
+ * Typed configuration object
+ * Includes parsed values and computed flags
+ */
 export const config = {
 	...parsed.data,
 	PORT: Number.parseInt(parsed.data.PORT, 10),
