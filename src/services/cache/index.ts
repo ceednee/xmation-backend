@@ -53,7 +53,10 @@ export { sadd, sadd as cacheSAdd } from "./sadd";
 export { smembers, smembers as cacheSMembers } from "./smembers";
 export { sdiff, sdiff as cacheSDiff } from "./sdiff";
 export { ttl, ttl as cacheTtl } from "./ttl";
+export { incr, incr as cacheIncr } from "./incr";
+export { expire, expire as cacheExpire } from "./expire";
 export { flush as cacheFlush, getStats as cacheStats } from "./admin";
 
 // Additional exports for compatibility
 export { getRedisClient, isRedisAvailable } from "./redis-client";
+export { memoryStore } from "./memory-store";
