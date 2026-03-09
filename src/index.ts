@@ -4,7 +4,7 @@ import { Elysia } from "elysia";
 import { config } from "./config/env";
 import { requestValidation, securityHeaders } from "./middleware/security";
 import actionRoutes from "./routes/actions";
-import authRoutes from "./routes/auth";
+import { authRoutes } from "./routes/auth";
 import syncRoutes from "./routes/sync";
 import triggerRoutes from "./routes/triggers";
 import workflowRoutes from "./routes/workflows";
