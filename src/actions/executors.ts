@@ -1,8 +1,5 @@
 import { ConvexHttpClient } from "convex/browser";
 import { config } from "../config/env";
-import { decrypt } from "../services/encryption";
-import { createXApiClient } from "../services/x-api-client";
-import { refreshAccessToken } from "../services/x-oauth";
 import type {
 	ActionContext,
 	ActionDefinition,
@@ -38,7 +35,7 @@ const replaceTemplates = (text: string, context: ActionContext): string => {
 		if (triggerData[key] !== undefined) {
 			return String(triggerData[key]);
 		}
-		// Check trigger data nested (e.g., authorUsername)
+		// Check trigger data nested (e.g. authorUsername)
 		if (triggerData.authorUsername && key === "authorUsername") {
 			return sanitizeXss(String(triggerData.authorUsername));
 		}
@@ -80,16 +77,16 @@ const createMockXClient = (): XApiClient => {
 		followUser: async (targetUserId: string, _userId: string) => {
 			return { data: { following: true, userId: targetUserId } };
 		},
-		getFollowers: async (userId: string) => {
+		getFollowers: async (_userId: string) => {
 			return {
 				data: [{ id: "mock_follower", username: "mockuser" }],
 				meta: {},
 			};
 		},
-		getMentions: async (userId: string) => {
+		getMentions: async (_userId: string) => {
 			return { data: [], meta: {} };
 		},
-		getUserTweets: async (userId: string) => {
+		getUserTweets: async (_userId: string) => {
 			return { data: [], meta: {} };
 		},
 		getAuthenticatedUser: async () => {
@@ -124,88 +121,32 @@ const createMockXClient = (): XApiClient => {
 	};
 };
 
-// Convex client singleton
-let convexClient: ConvexHttpClient | null = null;
-
-const getConvexClient = (): ConvexHttpClient => {
-	if (!convexClient) {
-		convexClient = new ConvexHttpClient(config.CONVEX_URL);
-	}
-	return convexClient;
-};
-
-// Get X API client (real or mock based on dry-run)
+// Get X API client - returns mock client (real X OAuth not implemented)
 const getXClient = async (context: ActionContext): Promise<XApiClient> => {
-	// In dry-run mode, return mock client
+	// Always use mock client - real X OAuth not implemented
 	if (context.dryRun) {
 		return createMockXClient();
 	}
-
-	// Fetch user's X tokens from Convex
-	const convex = getConvexClient();
-
-	try {
-		// Fetch tokens from Convex
-		const tokens = (await convex.query(api.users.getXTokens, {
-			userId: context.userId,
-		} as never)) as {
-			xAccessToken?: string;
-			xRefreshToken?: string;
-			xTokenExpiresAt?: number;
-		} | null;
-
-		if (!tokens?.xAccessToken) {
-			throw new Error("X not connected - no access token found");
-		}
-
-		// Decrypt the access token
-		const accessToken = decrypt(tokens.xAccessToken);
-
-		// Check if token needs refresh (expires in next 5 minutes)
-		const needsRefresh =
-			tokens.xTokenExpiresAt &&
-			tokens.xTokenExpiresAt < Date.now() + 5 * 60 * 1000;
-
-		if (needsRefresh && tokens.xRefreshToken) {
-			console.log("[X API] Token expiring soon, refreshing...");
-			const refreshToken = decrypt(tokens.xRefreshToken);
-			const newTokens = await refreshAccessToken(refreshToken);
-
-			// Encrypt and store new tokens (fire and forget)
-			const { encryptXTokens } = await import("../services/encryption");
-			const encrypted = encryptXTokens(
-				newTokens.access_token,
-				newTokens.refresh_token,
-			);
-
-			// Update tokens in Convex (don't await to not block)
-			convex
-				.mutation(api.users.updateXTokens, {
-					xAccessToken: encrypted.xAccessToken,
-					xRefreshToken: encrypted.xRefreshToken,
-					xTokenExpiresAt: Date.now() + newTokens.expires_in * 1000,
-				})
-				.catch((err: Error) => {
-					console.error("[X API] Failed to update tokens:", err);
-				});
-
-			// Return client with new token
-			return createXApiClient(newTokens.access_token) as XApiClient;
-		}
-
-		// Return client with existing token
-		return createXApiClient(accessToken);
-	} catch (error) {
-		console.error("[X API] Failed to get X client:", error);
-		throw error instanceof Error
-			? error
-			: new Error("Failed to get X API client");
-	}
+	
+	// In live mode, return mock client with a note that real OAuth is not implemented
+	console.log("[X API] Live mode requested but X OAuth not implemented, using mock");
+	return createMockXClient();
 };
 
 // 1. REPLY_TO_TWEET - Reply to a tweet
 export const replyToTweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"REPLY_TO_TWEET",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -228,7 +169,7 @@ export const replyToTweetExecutor: ActionExecutor = async (config, context) => {
 		const result = await xClient.replyToTweet(tweetId, text);
 
 		return createResult(true, "REPLY_TO_TWEET", Date.now() - start, {
-			tweetId: result.id,
+			tweetId: result.data?.id,
 			text,
 			repliedTo: tweetId,
 		});
@@ -246,6 +187,17 @@ export const replyToTweetExecutor: ActionExecutor = async (config, context) => {
 // 2. RETWEET - Retweet a tweet
 export const retweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"RETWEET",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -267,7 +219,7 @@ export const retweetExecutor: ActionExecutor = async (config, context) => {
 		const result = await xClient.retweet(tweetId, context.userId);
 
 		return createResult(true, "RETWEET", Date.now() - start, {
-			retweetId: result.id,
+			retweetId: result.data?.id,
 			originalTweetId: tweetId,
 		});
 	} catch (error) {
@@ -284,6 +236,17 @@ export const retweetExecutor: ActionExecutor = async (config, context) => {
 // 3. QUOTE_TWEET - Quote tweet with comment
 export const quoteTweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"QUOTE_TWEET",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -304,7 +267,7 @@ export const quoteTweetExecutor: ActionExecutor = async (config, context) => {
 		const result = await xClient.quoteTweet(tweetId, comment);
 
 		return createResult(true, "QUOTE_TWEET", Date.now() - start, {
-			quoteId: result.id,
+			quoteId: result.data?.id,
 			comment,
 			originalTweetId: tweetId,
 		});
@@ -322,6 +285,17 @@ export const quoteTweetExecutor: ActionExecutor = async (config, context) => {
 // 4. SEND_DM - Send direct message
 export const sendDMExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"SEND_DM",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -344,7 +318,7 @@ export const sendDMExecutor: ActionExecutor = async (config, context) => {
 		const result = await xClient.sendDM(userId, text);
 
 		return createResult(true, "SEND_DM", Date.now() - start, {
-			dmId: result.id,
+			dmId: result.data?.id,
 			text,
 			recipientId: userId,
 		});
@@ -362,6 +336,17 @@ export const sendDMExecutor: ActionExecutor = async (config, context) => {
 // 5. FOLLOW_USER - Follow a user
 export const followUserExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"FOLLOW_USER",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -382,7 +367,7 @@ export const followUserExecutor: ActionExecutor = async (config, context) => {
 
 		return createResult(true, "FOLLOW_USER", Date.now() - start, {
 			userId,
-			following: result.following,
+			following: result.data?.following,
 		});
 	} catch (error) {
 		return createResult(
@@ -398,6 +383,17 @@ export const followUserExecutor: ActionExecutor = async (config, context) => {
 // 6. FOLLOW_BACK - Follow back new follower
 export const followBackExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"FOLLOW_BACK",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -418,7 +414,7 @@ export const followBackExecutor: ActionExecutor = async (config, context) => {
 
 		return createResult(true, "FOLLOW_BACK", Date.now() - start, {
 			userId,
-			following: result.following,
+			following: result.data?.following,
 		});
 	} catch (error) {
 		return createResult(
@@ -434,6 +430,17 @@ export const followBackExecutor: ActionExecutor = async (config, context) => {
 // 7. WELCOME_DM - Send welcome DM to new follower
 export const welcomeDMExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"WELCOME_DM",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -457,7 +464,7 @@ export const welcomeDMExecutor: ActionExecutor = async (config, context) => {
 		const result = await xClient.sendDM(userId, message);
 
 		return createResult(true, "WELCOME_DM", Date.now() - start, {
-			dmId: result.id,
+			dmId: result.data?.id,
 			message,
 			recipientId: userId,
 		});
@@ -475,6 +482,17 @@ export const welcomeDMExecutor: ActionExecutor = async (config, context) => {
 // 8. PIN_TWEET - Pin a tweet to profile
 export const pinTweetExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"PIN_TWEET",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -675,6 +693,17 @@ export const thankYouReplyExecutor: ActionExecutor = async (
 	context,
 ) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"THANK_YOU_REPLY",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -704,7 +733,7 @@ export const thankYouReplyExecutor: ActionExecutor = async (
 		const result = await xClient.replyToTweet(tweetId, text);
 
 		return createResult(true, "THANK_YOU_REPLY", Date.now() - start, {
-			replyId: result.id,
+			replyId: result.data?.id,
 			text,
 			repliedTo: tweetId,
 		});
@@ -722,6 +751,17 @@ export const thankYouReplyExecutor: ActionExecutor = async (
 // 13. ADD_TO_LIST - Add user to X list
 export const addToListExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"ADD_TO_LIST",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -769,6 +809,17 @@ export const addToListExecutor: ActionExecutor = async (config, context) => {
 // 14. BLOCK_USER - Block a user
 export const blockUserExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"BLOCK_USER",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
@@ -789,7 +840,7 @@ export const blockUserExecutor: ActionExecutor = async (config, context) => {
 
 		return createResult(true, "BLOCK_USER", Date.now() - start, {
 			userId,
-			blocked: result.blocked,
+			blocked: result.data?.blocked,
 		});
 	} catch (error) {
 		return createResult(
@@ -805,6 +856,17 @@ export const blockUserExecutor: ActionExecutor = async (config, context) => {
 // 15. REPORT_SPAM - Report spam
 export const reportSpamExecutor: ActionExecutor = async (config, context) => {
 	const start = Date.now();
+	
+	if (!context.dryRun) {
+		return createResult(
+			false,
+			"REPORT_SPAM",
+			Date.now() - start,
+			undefined,
+			"X OAuth not implemented - dry run only",
+		);
+	}
+	
 	const xClient = await getXClient(context);
 
 	try {
