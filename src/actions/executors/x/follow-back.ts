@@ -1,0 +1,29 @@
+import type { ActionExecutor } from "../../types";
+import { createResult, getXClient, checkDryRun } from "./base";
+
+export const followBackExecutor: ActionExecutor = async (_config, context) => {
+	const start = Date.now();
+	const dryRunError = checkDryRun(context, "FOLLOW_BACK");
+	if (dryRunError) {
+		return createResult(false, "FOLLOW_BACK", Date.now() - start, undefined, dryRunError);
+	}
+
+	const xClient = await getXClient(context);
+	try {
+		const triggerData = context.triggerData as Record<string, unknown>;
+		const userId = String(triggerData.followerId || "");
+
+		if (!userId) {
+			return createResult(false, "FOLLOW_BACK", Date.now() - start, undefined, "No follower ID provided");
+		}
+
+		const result = await xClient.followUser(userId);
+		return createResult(true, "FOLLOW_BACK", Date.now() - start, {
+			userId,
+			following: result.data?.following,
+		});
+	} catch (error) {
+		return createResult(false, "FOLLOW_BACK", Date.now() - start, undefined,
+			error instanceof Error ? error.message : "Failed to follow back");
+	}
+};
