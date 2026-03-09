@@ -35,3 +35,36 @@ export function extractTweet(data: RapidApiTweetResponse): XTweet | null {
 		return null;
 	}
 }
+
+/**
+ * Extract multiple tweets from a timeline response.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractTweets(data: any): XTweet[] {
+	const tweets: XTweet[] = [];
+	const instructions = data?.data?.tweetResult?.result?.timeline?.instructions || [];
+	
+	for (const instruction of instructions) {
+		const entries = instruction.entries || [];
+		for (const entry of entries) {
+			const tweetId = entry.content?.itemContent?.tweet?.id;
+			if (tweetId) {
+				// Placeholder - in real implementation, would fetch full tweet data
+				tweets.push({
+					restId: tweetId,
+					createdAt: new Date().toISOString(),
+					text: "",
+					authorId: "",
+					authorScreenName: "",
+					retweetCount: 0,
+					favoriteCount: 0,
+					replyCount: 0,
+					quoteCount: 0,
+					lang: "en",
+				});
+			}
+		}
+	}
+	
+	return tweets;
+}

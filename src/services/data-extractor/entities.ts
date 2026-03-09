@@ -1,4 +1,4 @@
-import type { TweetEntities, TweetUrl, TweetMention, TweetHashtag } from "../../types/rapidapi";
+import type { TweetEntities, TweetUrl, TweetMention, TweetHashtag, RapidApiTweetResponse } from "../../types/rapidapi";
 
 export const extractHashtags = (entities?: TweetEntities): TweetHashtag[] => {
 	return entities?.hashtags?.map((h) => h.text) || [];
@@ -24,4 +24,24 @@ export const extractUrls = (entities?: TweetEntities): TweetUrl[] => {
 			indices: u.indices,
 		})) || []
 	);
+};
+
+/**
+ * Extract all entities from a tweet response
+ */
+export const extractEntities = (data?: RapidApiTweetResponse): {
+	hashtags: TweetHashtag[];
+	mentions: TweetMention[];
+	urls: TweetUrl[];
+} => {
+	if (!data?.data?.tweetResult?.legacy?.entities) {
+		return { hashtags: [], mentions: [], urls: [] };
+	}
+
+	const entities = data.data.tweetResult.legacy.entities;
+	return {
+		hashtags: extractHashtags(entities),
+		mentions: extractMentions(entities),
+		urls: extractUrls(entities),
+	};
 };
