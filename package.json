@@ -27,7 +27,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.6.0",
     "@types/bun": "latest",
-    "typescript": "^5.4.0"
+    "typescript": "^6.0.3"
   },
   "module": "src/index.ts",
   "type": "module"
